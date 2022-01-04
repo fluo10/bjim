@@ -1,15 +1,39 @@
-use clap::Parser;
+pub use clap::{Parser, Subcommand};
 
 /// Simple program to greet a person
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[clap(about, version, author)]
 pub struct Args {
-    /// Name of the person to greet
-    #[clap(short, long)]
-    pub name: String,
+    #[clap(subcommand)]
+    pub command: Commands,
+}
 
-    /// Number of times to greet
-    #[clap(short, long, default_value_t = 1)]
-    pub count: u8,
+#[derive(Subcommand)]
+pub enum Commands {
+    ShowTasks,
+    Migrate,
+}
+
+#[derive(Parser)]
+pub struct Config {
+    #[clap(short, long)]
+    pub path: String,
+}
+#[derive(Parser)]
+pub struct ShowTasks {
+    #[clap(short, long)]
+    pub open: bool,
+}
+
+impl ShowTasks {
+    pub fn run() {
+        println!("Show Tasks!");
+    }
+}
+
+#[derive(Parser)]
+pub struct Migrate {
+    #[clap(short, long)]
+    pub open: bool,
 }
 

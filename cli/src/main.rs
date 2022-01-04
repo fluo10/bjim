@@ -4,8 +4,11 @@ use clap::Parser;
 
 fn main() {
     let args = Args::parse();
-
-    for _ in 0..args.count {
-        println!("Hello {}!", args.name)
+    match &args.command {
+        cli::Commands::ShowTasks => {
+            println!("Run showtasks");}
+        cli::Commands::Migrate => {
+            println!("Run migrate");
+        }
     }
 }
