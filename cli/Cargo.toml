@@ -1,0 +1,10 @@
+[package]
+name = "sbjo-cli"
+version = "0.1.0"
+authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "3.0.1", features = ["derive"] }
