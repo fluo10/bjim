@@ -1,3 +1,7 @@
+pub mod config;
+pub mod journal;
+pub mod task;
+
 #[cfg(test)]
 mod tests {
     #[test]
