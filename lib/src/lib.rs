@@ -1,11 +1,14 @@
-pub mod config;
-pub mod journal;
-pub mod task;
+mod config;
+//pub mod journal;
+
+pub use config::Config;
+//pub use journal::Journal;
 
 #[cfg(test)]
 mod tests {
     #[test]
     fn it_works() {
-        assert_eq!(2 + 2, 4);
+        let config = super::Config::new();
+        config.show();
     }
 }

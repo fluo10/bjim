@@ -1,23 +1,45 @@
-use std::path::PathBuf;
-use std::dirs;
+use std::path::{Path, PathBuf};
+use git2::Repository;
+use dirs::config_dir;
+use std::env;
+use std::io;
+use std::default::Default;
 
 pub struct Config {
-    config_path: Path
-    document_root: String,
+    document_root: PathBuf,
 }
 
-impl Config {
-    pub fn new( path: Option<String> ) => Config {
-        
-        println!(dirs::config_dir)
-
-        .config/sbjo/sbjo.conf
-        todo!;
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+             document_root: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
+        }
     }
 }
 
-trait ToConfig {
-    fn to_config(&self);
-}
+impl Config {
+    pub fn new() -> Config {
+        let config: Config = Default::default();
+        return config;
+    }
+    //fn discover(PathBuf) -> Option<Config>{
+    //    config_path: config_dir()?.push("sbjo/sbjo.conf").as_path();
+    //}
+    
+    //#[cfg(test)]
+    pub fn show(&self){
+        println!("{}", self.document_root.to_str().unwrap());
+    }
 
-impl ToConfig for 
+    
+//    pub fn new( path: Option<Path> ) => Config {
+//        match path {
+//            Some(path) => 
+//        date: Option<date>,
+//        
+//        println!(dirs::config_dir)
+//
+//        .config/sbjo/sbjo.conf
+//        todo!;
+//    }
+}
