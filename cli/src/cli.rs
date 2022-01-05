@@ -1,4 +1,6 @@
 pub use clap::{Parser, Subcommand};
+use super::cmd::show_tasks::ShowTasks;
+use super::cmd::Command;
 
 /// Simple program to greet a person
 #[derive(Parser)]
@@ -10,8 +12,21 @@ pub struct Args {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    ShowTasks,
-    Migrate,
+    ShowTasks(ShowTasks),
+    Migrate(Migrate),
+}
+
+impl Commands {
+    pub fn run(&self){
+        match &self {
+            Commands::ShowTasks(x) => {
+                x.run();
+            }
+            Commands::Migrate(x) => {
+                println!("Run migrate");
+            }
+        }
+    }
 }
 
 #[derive(Parser)]
@@ -19,17 +34,7 @@ pub struct Config {
     #[clap(short, long)]
     pub path: String,
 }
-#[derive(Parser)]
-pub struct ShowTasks {
-    #[clap(short, long)]
-    pub open: bool,
-}
 
-impl ShowTasks {
-    pub fn run() {
-        println!("Show Tasks!");
-    }
-}
 
 #[derive(Parser)]
 pub struct Migrate {
