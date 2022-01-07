@@ -6,13 +6,13 @@ use std::io;
 use std::default::Default;
 
 pub struct Config {
-    document_root: PathBuf,
+    pub data_dir: PathBuf,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-             document_root: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
+             data_dir: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
         }
     }
 }
@@ -28,7 +28,7 @@ impl Config {
     
     //#[cfg(test)]
     pub fn show(&self){
-        println!("{}", self.document_root.to_str().unwrap());
+        println!("{}", self.data_dir.to_str().unwrap());
     }
 
     

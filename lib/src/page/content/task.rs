@@ -15,3 +15,7 @@ pub enum TaskStatus {
     Scheduled,
     InProgress
 }
+
+impl HasTask for Task{
+    fn is_open(&self) -> bool {
+        match self.

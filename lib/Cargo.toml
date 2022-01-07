@@ -9,3 +9,4 @@ edition = "2018"
 [dependencies]
 git2 = "0.13"
 dirs = "4.0.0"
+walkdir = "2.3.2"
