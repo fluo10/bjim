@@ -1,0 +1,15 @@
+data_dir = ""
+[[signifiers]]
+name = "tag"
+emoji = ""
+[[signifiers]]
+name = "date"
+emoji = "📅"
+value = "date"
+[[signifires]]
+name = "time"
+emoji = "⏰"
+[[signifires]]
+name = "hours"
+emoji = "⌛"
+value = "float"

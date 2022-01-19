@@ -10,3 +10,5 @@ edition = "2018"
 git2 = "0.13"
 dirs = "4.0.0"
 walkdir = "2.3.2"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.5.8"
