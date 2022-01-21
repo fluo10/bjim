@@ -17,14 +17,14 @@ use std::fmt::Debug;
 
 #[derive(Eq, PartialEq, Deserialize, Debug,)]
 pub struct Config {
-    pub content_dir: PathBuf,
+    pub data_dir: PathBuf,
     pub signifiers: Vec<Signifier>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-             content_dir: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
+             data_dir: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
              signifiers: Vec::new(),
         }
     }
@@ -41,7 +41,7 @@ impl Config {
     
     //#[cfg(test)]
     pub fn show(&self){
-        println!("{}", self.content_dir.to_str().unwrap());
+        println!("{}", self.data_dir.to_str().unwrap());
     }
 
     pub fn from_toml(raw : &str) -> Self {

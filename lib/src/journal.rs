@@ -1,20 +1,20 @@
 use super::config::Config;
-use super::content::Content;
+use super::data::Data;
 use super::page::Page;
 use walkdir::WalkDir;
 
 
 pub struct Journal {
-    config: Config,
-    pages:Content,
+    pub config: Config,
+    pub data: Data,
 }
 
 impl Journal {
     pub fn from_config( config: Config ) -> Result<Self, u8> {
-        let path = config.content_dir.to_path_buf();
+        let path = config.data_dir.to_path_buf();
         let journal= Journal {
             config: config,
-            pages: Content::new(path.as_path()).unwrap(),
+            data: Data::new(path.as_path()).unwrap(),
         };
         Ok(journal)
     }
