@@ -1,5 +1,7 @@
 mod config;
 mod journal;
+mod page;
+mod content;
 
 pub use config::Config;
 pub use journal::Journal;

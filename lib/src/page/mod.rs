@@ -1,23 +1,24 @@
-mod front_matter;
-mod task;
+//mod front_matter;
+//mod task;
 
-use front_matter::FrontMatter;
-use task::Task;
+use std::path::{Path, PathBuf};
+//use front_matter::FrontMatter;
+//use task::Task;
 
 pub struct Page {
-    path: String;
-    front_matter: FrontMatter;
-    content: Content;
+    path: PathBuf,
+//    front_matter: FrontMatter;
+//    content: Content;
 }
 
 impl Page {
-    pub fn new(path: String) => Journal {
-        todo!
+    pub fn new(path: &Path) -> Self {
+        Page { path: path.to_path_buf(),}
     }
-    pub fn write($self) {
-        todo!
+    pub fn write(&self) {
+        todo!()
     }
-    pub fn migrate($self, path: String) {
-        
+    pub fn migrate(&self, path: &Path) {
+        todo!()
     }
 }

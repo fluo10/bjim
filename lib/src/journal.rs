@@ -1,24 +1,34 @@
 use super::config::Config;
-//use super::page::Page;
+use super::content::Content;
+use super::page::Page;
 use walkdir::WalkDir;
+
 
 pub struct Journal {
     config: Config,
-//    pages: Vec<Page>,
+    pages:Content,
 }
 
 impl Journal {
-    pub fn from_config( config:Config ) -> Result<Self, u8> {
+    pub fn from_config( config: Config ) -> Result<Self, u8> {
+        let path = config.content_dir.to_path_buf();
         let journal= Journal {
             config: config,
-            //pages: Vec::new(),
+            pages: Content::new(path.as_path()).unwrap(),
         };
         Ok(journal)
     }
-    pub fn load_pages( &self ) {
-        for entry in WalkDir::new(self.config.data_dir.as_path()).into_iter().filter_map(|e| e.ok()) {
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_pages() {
+        for entry in walkdir::WalkDir::new(".").into_iter().filter_map(|e| e.ok()) {
             //pages.push(Page.from_path(file));
             println!("{}", entry.path().display());
         }
     }
+
+
 }
