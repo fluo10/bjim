@@ -1,4 +1,5 @@
 use super::page::Page;
+use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 //use super::page::Page;
 use walkdir::WalkDir;
@@ -10,13 +11,13 @@ pub struct Data{
 }
 
 impl Data {
-    pub fn new(path: &Path) -> Result<Self, String> {
-        let mut content = Self {
-            data_dir: path.to_path_buf(),
+    pub fn new(path: impl AsRef<Path>) -> Result<Self, String> {
+        let mut data = Self {
+            data_dir: path.as_ref().to_path_buf(),
             pages: HashMap::with_capacity(4),
         };
-        content.reload();
-        Ok(content)
+        data.reload();
+        Ok(data)
     }
     pub fn reload(&mut self) {
         for entry in walkdir::WalkDir::new(".").into_iter().filter_map(|e| {
