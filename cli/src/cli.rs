@@ -2,7 +2,7 @@ pub use clap::{Parser, Subcommand};
 use super::cmd::show_tasks::ShowTasks;
 use super::cmd::Command;
 use super::cmd::Check;
-use sbjo_lib::{Journal, Config};
+pub use sbjo_lib::{Config, Journal};
 
 /// Simple program to greet a person
 #[derive(Parser)]
@@ -21,9 +21,6 @@ pub enum Commands {
 
 impl Commands {
     pub fn run(&self){
-        let config = Config::new();
-        let journal = Journal::from_config(config).unwrap();
-        
         match &self {
             Commands::ShowTasks(x) => {
                 x.run();
@@ -32,7 +29,7 @@ impl Commands {
                 println!("Run migrate");
             }
             Commands::Check(x) => {
-                x.run(journal);
+                x.run();
             }
         }
     }
