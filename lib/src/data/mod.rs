@@ -31,5 +31,10 @@ impl Data {
             self.pages.insert( entry.path().to_path_buf(), Page::new(entry.path()));
         }
     }
+    pub fn read(&mut self) {
+        for (path, mut page) in &mut self.pages {
+            page.read();
+        }
+    }
 }
 
