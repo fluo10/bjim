@@ -3,7 +3,7 @@ pub mod signifier;
 
 use std::path::{Path, PathBuf};
 use git2::Repository;
-use dirs::config_dir;
+use dirs::{config_dir, home_dir};
 use std::env;
 use std::io;
 use std::default::Default;
@@ -20,7 +20,7 @@ use std::io::Result;
 #[derive(Eq, PartialEq, Deserialize, Debug,)]
 pub struct Config {
 
-    #[serde(default)]
+    #[serde(default,)]
     pub data_dir: PathBuf,
 
     #[serde(default)]
@@ -49,10 +49,9 @@ impl Config {
             .expect("something went wrong reading the file");
         Ok(Self::from_toml(contents.as_str()))
     }
-    
-    pub
 
-    fn discover() -> Result<Self>{
+
+    pub fn discover() -> Result<Self>{
         const LOCAL_CONFIG_NAME: &str = ".sbjo/config.toml";
         const USER_CONFIG_NAME: &str = "sbjo/config.toml";
         let mut local_config_path: PathBuf =  Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf();
@@ -76,8 +75,16 @@ impl Config {
     }
 
     pub fn from_toml(raw : &str) -> Self {
-        toml::from_str(raw).unwrap()
+        let mut config:Self = toml::from_str(raw).unwrap();
+        if config.data_dir.starts_with("~/") {
+            
+            let leaf = config.data_dir.strip_prefix("~").unwrap().to_str();
+            config.data_dir = home_dir().unwrap().join(leaf.unwrap());
+        }
+        config
     }
+
+
 
 
     
