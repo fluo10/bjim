@@ -4,12 +4,12 @@ use std::fs;
 use sbjo_lib::{Journal, Config};
 
 #[derive(Parser)]
-pub struct Check {
+pub struct CheckCmd {
     #[clap(short, long)]
     pub open: bool,
 }
 
-impl Check {
+impl CheckCmd {
     pub fn run(&self) {
         let config = Config::discover().unwrap();
         let mut journal = Journal::from_config(config).unwrap();

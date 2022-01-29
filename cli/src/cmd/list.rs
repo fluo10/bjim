@@ -12,14 +12,14 @@ pub struct ListCmd {
 impl ListCmd {
     pub fn run(&self) {
         let config = Config::discover().unwrap();
-        let &mut journal = Journal::from_config(config).unwrap();
-        journal.pages.read();
-        for (path, page) in journal.data.pages.into_iter().filter_map(|(path,page)|{
+        let mut journal = Journal::from_config(config).unwrap();
+        journal.data.read();
+        for (path, page) in journal.data.pages.into_iter().filter_map(|(path, page)|{
             if page.has_open_task {
-                Ok(page)
+               Some((path, page))
             } else {
                 None
-            }; }) {
+            } }) {
             
             println!("{}", page.path.display() );
         }

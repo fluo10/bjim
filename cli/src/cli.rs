@@ -1,7 +1,9 @@
 pub use clap::{Parser, Subcommand};
-use super::cmd::show_tasks::ShowTasks;
 use super::cmd::Command;
-use super::cmd::Check;
+use super::cmd::CheckCmd;
+use super::cmd::ConfigCmd;
+use super::cmd::ListCmd;
+use super::cmd::MigrateCmd;
 pub use sbjo_lib::{Config, Journal};
 
 /// Simple program to greet a person
@@ -14,15 +16,16 @@ pub struct Args {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    ShowTasks(ShowTasks),
-    Migrate(Migrate),
-    Check(Check),
+    Check(CheckCmd),
+    Config(ConfigCmd),
+    Migrate(MigrateCmd),
+    List(ListCmd),
 }
 
 impl Commands {
     pub fn run(&self){
         match &self {
-            Commands::ShowTasks(x) => {
+            Commands::Config(x) => {
                 x.run();
             }
             Commands::Migrate(x) => {
@@ -31,15 +34,14 @@ impl Commands {
             Commands::Check(x) => {
                 x.run();
             }
+            Commands::List(x) => {
+                x.run();
+            }
         }
     }
 }
 
 
 
-#[derive(Parser)]
-pub struct Migrate {
-    #[clap(short, long)]
-    pub open: bool,
-}
+
 
