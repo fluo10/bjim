@@ -36,7 +36,10 @@ impl Page {
     pub fn write(&self) {
         todo!()
     }
-    pub fn migrate(&self, path: &Path) {
+    pub fn migrate_to(&mut self, page: &mut Self) {
+        Self::migrate(self, page);
+    }
+    pub fn migrate(src: &mut Page, dst: &mut Self) {
         todo!()
     }
 }

@@ -14,9 +14,9 @@ impl ListCmd {
         let config = Config::discover().unwrap();
         let mut journal = Journal::from_config(config).unwrap();
         journal.data.read();
-        for (path, page) in journal.data.pages.into_iter().filter_map(|(path, page)|{
+        for page in journal.data.pages.into_iter().filter_map(|page|{
             if page.has_open_task {
-               Some((path, page))
+               Some(page)
             } else {
                 None
             } }) {

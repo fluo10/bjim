@@ -7,14 +7,14 @@ use std::collections::HashMap;
 
 pub struct Data{
     pub data_dir: PathBuf,
-    pub pages: HashMap<PathBuf, Page>,
+    pub pages: Vec<Page>,
 }
 
 impl Data {
     pub fn new(path: impl AsRef<Path>) -> Result<Self, String> {
         let mut data = Self {
             data_dir: path.as_ref().to_path_buf(),
-            pages: HashMap::new(),
+            pages: Vec::new(),
         };
         data.reload();
         Ok(data)
@@ -28,11 +28,11 @@ impl Data {
             }
         }) {
             //pages.push(Page.from_path(file));
-            self.pages.insert( entry.path().to_path_buf(), Page::new(entry.path()));
+            self.pages.push(Page::new(entry.path()));
         }
     }
     pub fn read(&mut self) {
-        for (path, mut page) in &mut self.pages {
+        for mut page in &mut self.pages {
             page.read();
         }
     }

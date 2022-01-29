@@ -13,7 +13,7 @@ impl CheckCmd {
     pub fn run(&self) {
         let config = Config::discover().unwrap();
         let mut journal = Journal::from_config(config).unwrap();
-        for (path, page) in journal.data.pages.into_iter() {
+        for page in journal.data.pages.into_iter() {
             println!("{}", page.path.display() );
         }
     }
