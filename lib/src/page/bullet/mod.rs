@@ -1,7 +1,11 @@
+mod status;
+pub use status::TaskStatus;
+
+/*
 pub struct Bullet{
     line: i64,
     raw_content: String,
-    children: Vec<Bullet>
+    children: Vec<Bullet>,
     section: String,
     task_status: Option<TaskStatus>,
 }
@@ -31,3 +35,4 @@ impl Bullet {
     }
 }
 
+*/
