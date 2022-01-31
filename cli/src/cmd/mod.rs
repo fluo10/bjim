@@ -1,9 +1,9 @@
-pub mod check;
-pub mod list;
-pub mod config;
-pub mod migrate;
+mod check;
+mod list;
+mod config;
+mod migrate;
 pub use check::CheckCmd;
-use lib::{Config, Journal};
+pub use lib::{Config, Journal};
 use std::io::{Error, Result, ErrorKind};
 pub use list::ListCmd;
 pub use config::ConfigCmd;
