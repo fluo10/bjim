@@ -2,6 +2,7 @@ pub mod signifier;
 
 
 use std::path::{Path, PathBuf};
+use std::convert::AsRef;
 use git2::Repository;
 use dirs::{config_dir, home_dir};
 use std::env;
@@ -51,10 +52,10 @@ impl Config {
     }
 
 
-    pub fn discover() -> Result<Self>{
+    pub fn discover(path: &AsRef<Path>) -> Result<Self>{
         const LOCAL_CONFIG_NAME: &str = ".sbjo/config.toml";
         const USER_CONFIG_NAME: &str = "sbjo/config.toml";
-        let mut local_config_path: PathBuf =  Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf();
+        let mut local_config_path: PathBuf =  Repository::discover(path.as_ref()).unwrap().workdir().unwrap().to_path_buf();
         local_config_path.push(LOCAL_CONFIG_NAME);
 
         let mut user_config_path:PathBuf = config_dir().unwrap();
