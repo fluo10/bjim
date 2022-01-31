@@ -5,6 +5,7 @@ mod data;
 
 pub use config::Config;
 pub use journal::Journal;
+pub use page::Page;
 //pub use journal::Journal;
 
 #[cfg(test)]

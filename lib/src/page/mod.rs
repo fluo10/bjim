@@ -7,7 +7,7 @@ use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Write, BufWriter};
 use regex::Regex;
 
 use front_matter::FrontMatter;
@@ -50,7 +50,19 @@ impl Page {
         
     }
     pub fn write(&self) {
-        todo!()
+        let file;
+        if self.path.is_file() {
+            file= File::open(self.path.clone()).unwrap();
+        } else if !self.path.exists() {
+            file = File::create(self.path.clone()).unwrap();
+        } else {
+            panic!();
+        }
+        let mut buf = BufWriter::new(file);
+        buf.write(b"---").unwrap();
+        buf.write(self.front_matter.as_ref().unwrap().raw.as_bytes()).unwrap();
+        buf.write(b"---").unwrap();
+        buf.write(self.content.as_ref().unwrap().raw.as_bytes()).unwrap();
     }
     pub fn migrate_to(&mut self, page: &mut Self) {
         Self::migrate(self, page);
@@ -77,6 +89,7 @@ fn split_content(content: &str) -> Result<(FrontMatter,PageContent), std::io::Er
     let content = PageContent::from_str(caps.get(2).unwrap().as_str());
     Ok((front_matter, content))
 }
+
 /*
 #[cfg(test)]
 mod tests {
