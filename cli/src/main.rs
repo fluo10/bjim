@@ -1,6 +1,7 @@
 mod cli;
 mod cmd;
 use cli::Args;
+mod args;
 use clap::Parser;
 
 fn main() {

@@ -3,7 +3,7 @@ pub mod list;
 pub mod config;
 pub mod migrate;
 pub use check::CheckCmd;
-pub use sbjo_lib::{Config, Journal};
+use lib::{Config, Journal};
 use std::io::{Error, Result, ErrorKind};
 pub use list::ListCmd;
 pub use config::ConfigCmd;
@@ -26,15 +26,7 @@ pub trait Sub {
 
 }
 
-#[derive(Args)]
-struct GlobalArgs {
-    #[clap(short, long, from_global)]
-    config: Option<PathBuf>,
-    #[clap(short, long, from_global)]
-    journal_dir: Option<String>,
-    #[clap(short, long, from_global)]
-    verbose: bool,
+pub trait Command {
+
+
 }
-
-
-pub trait Command {}

@@ -1,7 +1,7 @@
 pub use clap::Parser;
-use super::{Command, GlobalArgs};
+use super::super::args::GlobalArgs;
 use std::fs;
-use sbjo_lib::{Journal, Config};
+use lib::{Journal, Config};
 
 #[derive(Parser)]
 pub struct ConfigCmd {
@@ -12,10 +12,7 @@ pub struct ConfigCmd {
 
 impl ConfigCmd {
     pub fn run(&self) {
-        let config = match self.global.config.clone() {
-            Some(x) => Config::from_path(x.as_path()).unwrap(),
-            None => Config::discover().unwrap(),
-        };
+        let config = self.global.get_config();
         config.show();
     }
 }

@@ -5,7 +5,9 @@ use super::cmd::CheckCmd;
 use super::cmd::ConfigCmd;
 use super::cmd::ListCmd;
 use super::cmd::MigrateCmd;
-pub use sbjo_lib::{Config, Journal};
+use lib::{Config, Journal};
+
+
 
 /// Simple program to greet a person
 #[derive(Parser)]
