@@ -1,23 +1,24 @@
 pub use clap::Parser;
+pub use std::path::PathBuf;
 
 #[derive(Parser)]
 pub struct MigrateCmd {
-    #[clap(short, long)]
+    #[clap(short='n', long)]
     pub dry_run: bool,
-    pub source_path: Option<String>,
-    pub destination_path: String,
+    #[clap(short, long)]
+    pub verbose: bool,
+    #[clap(short, long)]
+    pub config: Option<PathBuf>,
+    pub source: String,
+    pub destination: String,
 
 }
 
 impl MigrateCmd {
     pub fn run(&self) {
         println!("Execute migrate");
-        match &self.source_path {
-            Some(x) => {
-                println!("from: {}", x);
-            }
-            None => {}
-        }
-        println!("to:   {}", self.destination_path);
+        
+        println!("from: {}", self.source);
+        println!("to:   {}", self.destination);
     }
 }

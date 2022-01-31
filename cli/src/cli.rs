@@ -1,4 +1,5 @@
 pub use clap::{Parser, Subcommand};
+use std::path::PathBuf;
 use super::cmd::Command;
 use super::cmd::CheckCmd;
 use super::cmd::ConfigCmd;
@@ -10,8 +11,16 @@ pub use sbjo_lib::{Config, Journal};
 #[derive(Parser)]
 #[clap(about, version, author)]
 pub struct Args {
+    #[clap(short, long, global=true)]
+    config: Option<PathBuf>,
+    #[clap(short, long, global=true)]
+    journal_dir: Option<String>,
+    #[clap(short, long, global=true)]
+    verbose: bool,
+    
     #[clap(subcommand)]
     pub command: Commands,
+    
 }
 
 #[derive(Subcommand)]
@@ -29,7 +38,7 @@ impl Commands {
                 x.run();
             }
             Commands::Migrate(x) => {
-                println!("Run migrate");
+                x.run();
             }
             Commands::Check(x) => {
                 x.run();
