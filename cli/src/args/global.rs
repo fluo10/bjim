@@ -6,11 +6,11 @@ use std::path::{PathBuf};
 #[derive(Args)]
 pub struct GlobalArgs {
     #[clap(short, long, from_global)]
-    config_path: Option<PathBuf>,
+    pub config_path: Option<PathBuf>,
     #[clap(short, long, from_global)]
-    journal_dir: Option<PathBuf>,
+    pub journal_dir: Option<PathBuf>,
     #[clap(short, long, from_global)]
-    verbose: bool,
+    pub verbose: bool,
 }
 
 impl GlobalArgs {

@@ -1,5 +1,7 @@
 mod global;
-mod page_query;
+mod page;
+mod write;
 
 pub use global::GlobalArgs;
-pub use page_query::PageQueryArgs;
+pub use page::PageArgs;
+pub use write::WriteArgs;
