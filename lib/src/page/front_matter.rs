@@ -1,3 +1,5 @@
+#[derive(Clone)]
+
 pub struct FrontMatter {
     //date: String,
     //categories: Vec<String>,

@@ -14,7 +14,7 @@ use lib::{Config, Journal};
 #[clap(about, version, author)]
 pub struct Args {
     #[clap(short, long, global=true)]
-    config: Option<PathBuf>,
+    config_path: Option<PathBuf>,
     #[clap(short, long, global=true)]
     journal_dir: Option<String>,
     #[clap(short, long, global=true)]

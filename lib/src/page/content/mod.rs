@@ -26,7 +26,7 @@ impl PageContent {
         let re = Regex::new(pattern).unwrap();
         let mut result = String::new();
         for caps in re.captures_iter(self.raw.as_str()) {
-            result = result + &caps[0];
+            result = result + "\n" + &caps[0];
         }
         self.raw = result;
     }

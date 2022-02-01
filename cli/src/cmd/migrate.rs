@@ -32,6 +32,8 @@ impl MigrateCmd {
         } else {
             panic!();
         }
+
+        src_page.read();
         src_page.migrate_to(&mut dst_page);
         if !self.dry_run {
             src_page.write();
