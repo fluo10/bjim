@@ -13,14 +13,22 @@ impl PageContent {
     }
     pub fn replace_task_status(&mut self, before: TaskStatus, after: TaskStatus) {
         let escaped = regex::escape(format!("{}", before).as_str());
-        let pattern = format!(r"(?m)^(- \[){}(\] .*)$", escaped);
+        let pattern = format!(r"(?m)^(\s*- \[){}(\] .*)$", escaped);
         //let pattern = format!(r"(?m)^(- \[)[{}](\] .*)$", before);
         let replacement = "${1}".to_string() + format!("{}", after).as_str() + "${2}";
         let re = Regex::new(pattern.as_str()).unwrap();
         self.raw = re.replace_all(self.raw.as_str(), replacement.as_str()).to_string();
     }
-    pub fn filter_open_tasks(&mut self) {
 
+    /// Delete other lines, leaving only the active task, heading and blank lines
+    pub fn filter_open_tasks(&mut self) {
+        let pattern = r##"(?m)(?:^\s*- \[ \] .*$)|(?:^\s*$)|(?:^#+ .*$)"##;
+        let re = Regex::new(pattern).unwrap();
+        let mut result = String::new();
+        for caps in re.captures_iter(self.raw.as_str()) {
+            result = result + &caps[0];
+        }
+        self.raw = result;
     }
     
 }
@@ -81,6 +89,21 @@ mod tests {
         test_by_status(TaskStatus::Open, TaskStatus::Scheduled);
         test_by_status(TaskStatus::Scheduled, TaskStatus::Closed);
 
+    }
+
+    #[test]
+    fn filter_open_tasks() {
+        let mut content = PageContent::from_str(r##"## Section1
+
+- [ ] Open task
+- [>] Migrated task
+- [<] Scheduled task
+- [/] Task in progress
+- [x] Closed task"##);
+        content.filter_open_tasks();
+        assert_eq!(content.raw, r##"## Section1
+
+- [ ] Open task"##);
     }
 
 }
