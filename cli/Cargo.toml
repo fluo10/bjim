@@ -1,5 +1,5 @@
 [package]
-name = "sbjo-cli"
+name = "bjim-cli"
 version = "0.1.0"
 authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
 edition = "2018"
@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 clap = { version = "3.0.1", features = ["derive"] }
-lib = { package = "sbjo-lib", path = "../lib" }
+lib = { package = "bjim-lib", path = "../lib" }
