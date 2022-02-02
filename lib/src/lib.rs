@@ -2,10 +2,12 @@ mod config;
 mod journal;
 mod page;
 mod data;
+mod error;
 
 pub use config::Config;
 pub use journal::Journal;
 pub use page::Page;
+pub use error::{Error, ErrorKind};
 //pub use journal::Journal;
 
 #[cfg(test)]

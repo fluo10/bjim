@@ -14,7 +14,6 @@ use front_matter::FrontMatter;
 use content::PageContent;
 use bullet::TaskStatus;
 
-
 pub struct Page {
     pub path: PathBuf,
     pub raw_content: String,
