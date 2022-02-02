@@ -22,7 +22,7 @@ impl PageContent {
 
     /// Delete other lines, leaving only the active task, heading and blank lines
     pub fn filter_open_tasks(&mut self) {
-        let pattern = r##"(?m)(?:^\s*- \[ \] .*$)|(?:^\s*$)|(?:^#+ .*$)"##;
+        let pattern = r##"(?m)(?:^\s*- \[ |/\] .*$)|(?:^\s*$)|(?:^#+ .*$)"##;
         let re = Regex::new(pattern).unwrap();
         let mut result = String::new();
         for caps in re.captures_iter(self.raw.as_str()) {

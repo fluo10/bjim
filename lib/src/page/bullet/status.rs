@@ -12,6 +12,7 @@ pub enum TaskStatus {
     Migrated,
     Scheduled,
     InProgress,
+    Canceled,
 }
 
 impl Display for TaskStatus {
@@ -22,6 +23,7 @@ impl Display for TaskStatus {
             Self::Migrated => write!(f, ">"),
             Self::Scheduled => write!(f, "<"),
             Self::InProgress => write!(f, "/"),
+            Self::Canceled => write!(f, "-"),
         }
     }
 }
@@ -36,5 +38,6 @@ mod tests {
         assert_eq!(format!{"{}", TaskStatus::Migrated} , ">");
         assert_eq!(format!{"{}", TaskStatus::Scheduled} , "<");
         assert_eq!(format!{"{}", TaskStatus::InProgress} , "/");
+        assert_eq!(format!{"{}", TaskStatus::Canceled} , "-");
     }
 }
