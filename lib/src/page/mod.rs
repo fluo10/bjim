@@ -9,6 +9,7 @@ use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
 use std::io::{BufRead, BufReader, Write, BufWriter};
 use regex::Regex;
+use chrono::Local;
 
 use front_matter::FrontMatter;
 use content::PageContent;
@@ -70,6 +71,7 @@ impl Page {
         match (&src.front_matter, &dst.front_matter) {
             (Some(x), None) => {
                 dst.front_matter = src.front_matter.clone();
+                dst.front_matter.as_mut().unwrap().update_date(Local::today().naive_local());
             },
             _ => {},
         };
