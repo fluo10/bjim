@@ -78,6 +78,7 @@ impl Page {
         src_content.replace_task_status(TaskStatus::Open,TaskStatus::Migrated);
         dst_content.replace_task_status(TaskStatus::Migrated, TaskStatus::Open);
         dst_content.filter_open_tasks();
+        dst_content.replace_task_status(TaskStatus::Closed, TaskStatus::Open);
         dst.content = Some(dst_content);
     }
 

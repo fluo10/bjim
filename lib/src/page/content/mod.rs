@@ -19,10 +19,11 @@ impl PageContent {
         let re = Regex::new(pattern.as_str()).unwrap();
         self.raw = re.replace_all(self.raw.as_str(), replacement.as_str()).to_string();
     }
+    
 
     /// Delete other lines, leaving only the active task, heading and blank lines
     pub fn filter_open_tasks(&mut self) {
-        let pattern = r##"(?m)(?:^[ \t]*?- \[[ /]\] .*?$)|(?:^[ ]*$)|(?:^#+ .*$)"##;
+        let pattern = r##"(?m)(?:^[ \t]*?- \[[ /]\] .*?$)|(?:^[ ]*$)|(?:^#+ .*$)|(?:^[ \t]*?- \[x\] .*🔁.*$)"##;
         let re = Regex::new(pattern).unwrap();
         let mut result:Vec<String> = Vec::new();
         for caps in re.captures_iter(self.raw.as_str()) {
@@ -99,12 +100,14 @@ mod tests {
 - [>] Migrated task
 - [<] Scheduled task
 - [/] Task in progress
-- [x] Closed task"##);
+- [x] Closed task
+- [x] Closed task with 🔁"##);
         content.filter_open_tasks();
         assert_eq!(content.raw, r##"## Section1
 
 - [ ] Open task
-- [/] Task in progress"##);
+- [/] Task in progress
+- [x] Closed task with 🔁"##);
     }
 
 }
