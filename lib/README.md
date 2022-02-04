@@ -1,2 +1,2 @@
-# sbjo
-CLI tool for handling markdown files like bullet journal
+# bjim
+Library for handling markdown files like bullet journal
