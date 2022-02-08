@@ -86,15 +86,18 @@ impl Page {
 
     fn split_content(&mut self) {
         let re:Regex = Regex::new(
-            r"^[[:space:]]*---(\r?\n(?s).*?(?-s))---[[:space:]]*(?:$|(?:\r?\n((?s).*(?-s))$))"
+            r"^(?:---\r?\n(?P<f>(?s).*?(?-s))---\r?\n)?(?P<c>(?s).*(?-s))$"
         ).unwrap();
         let caps = re.captures(self.raw_content.as_str()).unwrap();
-        self.front_matter = Some(FrontMatter::from_str(caps.get(1).unwrap().as_str()));
-        self.content = Some(PageContent::from_str(caps.get(2).unwrap().as_str()));
+        self.front_matter = match caps.name("f") {
+            Some(x) => Some(FrontMatter::from(x.as_str())),
+            None => None,
+        };
+        self.content = Some(PageContent::from(caps.name("c").unwrap().as_str()));
     }
     fn join_content(&mut self) {
         self.raw_content = match &self.front_matter {
-            Some(x) => String::from("---") +  self.front_matter.as_ref().unwrap().raw.as_str() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
+            Some(x) => String::from("---\n") +  self.front_matter.as_ref().unwrap().raw.as_str() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
             None => String::from(self.content.as_ref().unwrap().raw.as_str()),
         };
         
@@ -102,64 +105,71 @@ impl Page {
 
 }
 
-fn split_content(content: &str) -> Result<(FrontMatter,PageContent), std::io::Error> {
-    
-    let re:Regex = Regex::new(
-        r"^[[:space:]]*---(\r?\n(?s).*?(?-s))---[[:space:]]*(?:$|(?:\r?\n((?s).*(?-s))$))"
-    ).unwrap();
-    let caps = re.captures(content).unwrap();
-    let front_matter = FrontMatter::from_str(caps.get(1).unwrap().as_str());
-    let content = PageContent::from_str(caps.get(2).unwrap().as_str());
-    Ok((front_matter, content))
-}
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
     
-    const RAW: &str =r"---
+
+
+    #[test]
+    fn join_content() {
+        fn assert_split(origin: &str, front_matter: &str, content: &str) {
+            let mut page = Page { 
+                path: PathBuf::new(),
+                raw_content: String::from(origin),
+                has_open_task: false,
+                front_matter: None,
+                content: None,
+            };
+            page.split_content();
+            assert_eq!( match &page.front_matter {
+                Some(x) => x.raw.as_str().clone(),
+                None => "",
+            }, front_matter);
+            assert_eq!(page.content.unwrap().raw.as_str(), content);
+
+            let mut page = Page{
+                path: PathBuf::new(),
+                raw_content: String::new(),
+                has_open_task: false,
+                front_matter: match front_matter {
+                    "" => None, 
+                    _ => Some(FrontMatter::from(front_matter))
+                },
+                content: Some(PageContent::from(content)),
+            };
+            page.join_content();
+            assert_eq!(page.raw_content.as_str(), origin);
+        }
+        assert_split(
+r"---
 title: test
 ---
 test
 content
-";
-    const HEADER: &str =r"
-title: test
-";
-    const CONTENT: &str = r"test
+",
+r"title: test
+",
+r"test
 content
-";
-
-    #[test]
-    fn join_content() {
-        let mut page = Page { 
-            path: PathBuf::new(),
-            raw_content: String::from(RAW),
-            has_open_task: false,
-            front_matter: None,
-            content: None,
-        };
-        page.split_content();
-        assert_eq!(page.front_matter.unwrap().raw.as_str(), HEADER);
-        assert_eq!(page.content.unwrap().raw.as_str(), CONTENT);
-
-        let mut page = Page{
-            path: PathBuf::new(),
-            raw_content: String::new(),
-            has_open_task: false,
-            front_matter: Some(FrontMatter::from_str(HEADER)),
-            content: Some(PageContent::from_str(CONTENT)),
-        };
-        page.join_content();
-        assert_eq!(page.raw_content.as_str(), RAW);
-        
+");
+        assert_split(
+r"---
+title: test
+--
+test
+content
+",
+r"",
+r"---
+title: test
+--
+test
+content
+");
     }
 
-    #[test]
-    fn split_content() {
-
-    }
     
     /*
     fn test_io (){

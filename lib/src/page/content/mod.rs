@@ -33,6 +33,20 @@ impl PageContent {
     }
     
 }
+impl AsRef<str> for PageContent {
+    fn as_ref(&self) -> &str {
+        self.raw.as_str()
+    }
+}
+
+impl From<&str> for PageContent {
+    fn from(s: &str) -> Self {
+        Self{
+            raw: String::from(s),
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

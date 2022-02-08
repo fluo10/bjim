@@ -11,11 +11,6 @@ pub struct FrontMatter {
 }
 
 impl FrontMatter {
-    pub fn from_str(raw: &str) -> Self {
-        FrontMatter{
-            raw: String::from(raw),
-        }
-    }
     pub fn update_date(&mut self, date: NaiveDate) {
         const DATE_PATTERN:&str = r"\d{4}-\d{2}-\d{2}";
         let replacement = date.format("%F").to_string();
@@ -23,6 +18,21 @@ impl FrontMatter {
         self.raw = re.replace_all(self.raw.as_str(), replacement.as_str()).to_string();
     }
 }
+
+impl AsRef<str> for FrontMatter{
+    fn as_ref(&self) -> &str {
+        self.raw.as_str()
+    }
+}
+
+impl From<&str> for FrontMatter{
+    fn from(s: &str) -> Self {
+        FrontMatter{
+            raw: String::from(s),
+        }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -33,7 +43,7 @@ mod tests {
 name: test-name";
         const AFTER: &str = r"date: 2022-02-03
 name: test-name";
-        let mut fm = FrontMatter::from_str(BEFORE);
+        let mut fm = FrontMatter::from(BEFORE);
 
         fm.update_date(NaiveDate::parse_from_str("2022-02-03", "%Y-%m-%d").unwrap());
         assert_eq!(fm.raw.as_str(), AFTER);
