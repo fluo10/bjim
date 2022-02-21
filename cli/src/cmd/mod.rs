@@ -4,7 +4,6 @@ mod config;
 mod migrate;
 pub use check::CheckCmd;
 pub use lib::{Config, Journal};
-use std::io::{Error, Result, ErrorKind};
 pub use list::ListCmd;
 pub use config::ConfigCmd;
 pub use migrate::MigrateCmd;

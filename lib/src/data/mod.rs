@@ -4,6 +4,7 @@ use std::path::{Path, PathBuf};
 //use super::page::Page;
 use walkdir::WalkDir;
 use std::collections::HashMap;
+use anyhow::Result;
 
 pub struct Data{
     pub data_dir: PathBuf,
@@ -11,7 +12,7 @@ pub struct Data{
 }
 
 impl Data {
-    pub fn new(path: impl AsRef<Path>) -> Result<Self, String> {
+    pub fn new(path: impl AsRef<Path>) -> Result<Self> {
         let mut data = Self {
             data_dir: path.as_ref().to_path_buf(),
             pages: Vec::new(),

@@ -2,6 +2,7 @@ use super::config::Config;
 use super::data::Data;
 use super::page::Page;
 use walkdir::WalkDir;
+use anyhow::Result;
 
 
 pub struct Journal {
@@ -10,7 +11,7 @@ pub struct Journal {
 }
 
 impl Journal {
-    pub fn from_config( config: Config ) -> Result<Self, u8> {
+    pub fn from_config( config: Config ) -> Result<Self> {
         let path = config.data_dir.to_path_buf();
         let journal= Journal {
             config: config,

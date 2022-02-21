@@ -14,9 +14,7 @@ use toml::Value;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::Result;
-
-//type Result<T> = Result<T, std::io::Error>;
+use anyhow::{bail,Result};
 
 #[derive(Eq, PartialEq, Deserialize, Debug,)]
 pub struct Config {
@@ -66,7 +64,7 @@ impl Config {
         } else if user_config_path.is_file() {
             Self::from_path(user_config_path.as_path())
         } else {
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "Not found"))
+            bail!("Not found")
         }
     }
     
