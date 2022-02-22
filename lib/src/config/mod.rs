@@ -1,20 +1,24 @@
 pub mod signifier;
 
+pub use signifier::Signifier;
 
 use std::path::{Path, PathBuf};
 use std::convert::AsRef;
-use git2::Repository;
-use dirs::{config_dir, home_dir};
 use std::env;
 use std::io;
 use std::default::Default;
-use serde::Deserialize;
-pub use signifier::Signifier;
-use toml::Value;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
+
 use anyhow::{bail,Result};
+use dirs::{config_dir, home_dir};
+use git2::Repository;
+use once_cell::sync::OnceCell;
+use serde::Deserialize;
+use toml::Value;
+
+static INSTANCE: OnceCell<Config> = OnceCell::new();
 
 #[derive(Eq, PartialEq, Deserialize, Debug,)]
 pub struct Config {
@@ -67,7 +71,12 @@ impl Config {
             bail!("Not found")
         }
     }
-    
+    pub fn global() -> &'static Config {
+        INSTANCE.get().expect("Config is not initialized")
+    }
+    pub fn globalize(self) {
+        INSTANCE.set(self).unwrap();
+    }
     //#[cfg(test)]
     pub fn show(&self){
         println!("{}", self.data_dir.to_str().unwrap());
