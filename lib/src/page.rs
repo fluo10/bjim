@@ -1,6 +1,9 @@
 mod front_matter;
 mod content;
 mod bullet;
+//mod section;
+mod tag;
+
 //mod task;
 use std::env;
 use std::convert::AsRef;
