@@ -1,4 +1,5 @@
 pub mod signifier;
+mod regular_log;
 
 pub use signifier::Signifier;
 
