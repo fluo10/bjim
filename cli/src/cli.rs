@@ -1,10 +1,11 @@
 pub use clap::{Parser, Subcommand};
 use std::path::PathBuf;
-use super::cmd::Command;
-use super::cmd::CheckCmd;
-use super::cmd::ConfigCmd;
-use super::cmd::ListCmd;
-use super::cmd::MigrateCmd;
+use crate::cmd::Command;
+use crate::cmd::CheckCmd;
+use crate::cmd::ConfigCmd;
+use crate::cmd::ListCmd;
+use crate::cmd::MigrateCmd;
+use crate::cmd::UpdateCmd;
 use lib::{Config, Journal};
 
 
@@ -31,6 +32,7 @@ pub enum Commands {
     Config(ConfigCmd),
     Migrate(MigrateCmd),
     List(ListCmd),
+    Update(UpdateCmd),
 }
 
 impl Commands {
@@ -46,6 +48,9 @@ impl Commands {
                 x.run();
             }
             Commands::List(x) => {
+                x.run();
+            }
+            Commands::Update(x) => {
                 x.run();
             }
         }
