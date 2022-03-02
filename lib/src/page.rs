@@ -1,7 +1,7 @@
 mod front_matter;
 mod content;
 mod bullet;
-//mod section;
+mod section;
 mod tag;
 
 //mod task;
