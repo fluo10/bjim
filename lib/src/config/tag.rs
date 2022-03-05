@@ -45,13 +45,26 @@ pub struct TagConfig {
     assigned: Option<AssignedTag>,
 }
 
-impl Default for TagConfig {
-    fn default() -> Self {
+impl TagConfig {
+    pub const fn new() -> Self {
         Self{
             inherit: true,
             migrate: true,
             value_type: None,
             assigned: None,
         }
+    }
+}
+
+impl Default for TagConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<'a> Default for &'a TagConfig {
+    fn default() -> Self {
+        static DEFAULT: TagConfig = TagConfig::new();
+        &DEFAULT
     }
 }
