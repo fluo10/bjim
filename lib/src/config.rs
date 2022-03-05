@@ -1,9 +1,10 @@
-pub mod signifier;
 mod regular_log;
+mod tag;
 
-pub use signifier::Signifier;
+pub use tag::TagConfig;
 
 use std::path::{Path, PathBuf};
+use std::collections::HashMap;
 use std::convert::AsRef;
 use std::env;
 use std::io;
@@ -21,21 +22,21 @@ use toml::Value;
 
 static INSTANCE: OnceCell<Config> = OnceCell::new();
 
-#[derive(Eq, PartialEq, Deserialize, Debug,)]
+#[derive(PartialEq, Deserialize, Debug,)]
 pub struct Config {
 
     #[serde(default,)]
     pub data_dir: PathBuf,
 
     #[serde(default)]
-    pub signifiers: Vec<Signifier>,
+    pub tags: HashMap<String, TagConfig>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
              data_dir: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
-             signifiers: Vec::new(),
+             tags: HashMap::new(),
         }
     }
 }
@@ -112,54 +113,18 @@ impl Config {
 #[cfg(test)]
 mod tests {
 
-    use super::{Config, Signifier};
-    use std::path::PathBuf;
-    
+    use super::*; 
     
     #[test]
     fn parse_string_all() {
         let fromtoml = Config::from_toml(r##"data_dir = "/home/test/"
-        [[signifiers]]
-        name = "tag"
-        emoji = "🏷️"
-        [[signifiers]]
-        name = "date"
-        emoji = "📅"
-        value = "date"
-        [[signifiers]]
-        name = "time"
-        emoji = "⏰"
-        value = "date"
-        [[signifiers]]
-        name = "hours"
-        emoji = "⌛"
-        value = "float""##);
-        
-        let config = Config{
+[tags.default]
+"##);
+        let mut config = Config{
             data_dir : PathBuf::from("/home/test/"),
-            signifiers : vec![
-                Signifier{ 
-                    name: "tag".to_string(),
-                    emoji: "🏷️".to_string(),
-                    value: None,
-                },
-                Signifier{
-                    name: "date".to_string(),
-                    emoji: "📅".to_string(),
-                    value: Some("date".to_string()),
-                },
-                Signifier {
-                    name: "time".to_string(),
-                    emoji: "⏰".to_string(),
-                    value: Some("date".to_string()),
-                },
-                Signifier {
-                    name: "hours".to_string(),
-                    emoji: "⌛".to_string(),
-                    value: Some("float".to_string()),
-                },
-            ],
+            tags : HashMap::new(),
         };
+        config.tags.insert(String::from("default"), TagConfig::default());
         assert_eq!(fromtoml, config);
     }
     
@@ -168,7 +133,7 @@ mod tests {
         
         let config = Config{
             data_dir : PathBuf::from("/home/test/"),
-            signifiers : Vec::new(),
+            tags : HashMap::new(),
         };
         assert_eq!(fromtoml, config);
     }
