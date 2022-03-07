@@ -1,7 +1,7 @@
 
 use std::default::Default;
 use anyhow::{bail, Result};
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 use toml::Value;
 
 /// Assigned role for tag

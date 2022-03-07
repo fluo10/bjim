@@ -1,14 +1,29 @@
-use regex::Regex;
-use chrono::{DateTime, NaiveDate, Local};
+use std::convert::{From, TryFrom};
+use std::default::Default;
 
-#[derive(Clone)]
+use anyhow::Result;
+use chrono::{NaiveDate, NaiveDateTime};
+use regex::Regex;
+use serde::Deserialize;
+use serde_yaml;
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct FrontMatter {
-    //date: String,
-    //categories: Vec<String>,
-    //tags: Vec<String>,
+    #[serde(default)]
+    title: Option<String>,
+    #[serde(default)]
+    date: Option<NaiveDateTime>,
+    #[serde(default)]
+    categories: Vec<String>,
+    #[serde(default)]
+    tags: Vec<String>,
+    #[serde(default)]
     //spent_time: f32,
+    #[serde(skip)]
     pub raw: String,
 }
+
 
 impl FrontMatter {
     pub fn update_date(&mut self, date: NaiveDate) {
@@ -19,17 +34,24 @@ impl FrontMatter {
     }
 }
 
-impl AsRef<str> for FrontMatter{
-    fn as_ref(&self) -> &str {
-        self.raw.as_str()
+impl Default for FrontMatter{
+    fn default() -> Self {
+        FrontMatter{
+            title: None,
+            date: None,
+            tags: Vec::new(),
+            categories: Vec::new(),
+            raw: String::new(),            
+        }
     }
 }
 
-impl From<&str> for FrontMatter{
-    fn from(s: &str) -> Self {
-        FrontMatter{
-            raw: String::from(s),
-        }
+
+impl From<&str> for FrontMatter {
+    fn from(s: &str) -> Self{
+        let mut f: FrontMatter = serde_yaml::from_str(s).unwrap();
+        f.raw = String::from(s);
+        f
     }
 }
 
@@ -39,14 +61,49 @@ mod tests {
     use super::*;
     #[test]
     fn update_date() {
-        const BEFORE: &str = r"date: 2022-01-02
-name: test-name";
-        const AFTER: &str = r"date: 2022-02-03
-name: test-name";
+        const BEFORE: &str = r"---
+        date: 2022-01-02
+title: test-title
+";
+        const AFTER: &str = r"---
+        date: 2022-02-03
+title: test-title
+";
         let mut fm = FrontMatter::from(BEFORE);
 
         fm.update_date(NaiveDate::parse_from_str("2022-02-03", "%Y-%m-%d").unwrap());
         assert_eq!(fm.raw.as_str(), AFTER);
 
+    }
+    #[test]
+    fn parse_date() {
+        /*
+        assert_eq!(
+            FrontMatter::from(r"---
+date: 2022-01-02
+---
+"),
+            FrontMatter{
+                date: Some(NaiveDate::from_ymd(2022, 01, 02).and_hms(0,0,0)),
+                raw: String::from(r"---
+                date: 2022-01-02
+                "),
+                ..Default::default()
+            }
+
+        );
+        */
+        assert_eq!(
+            FrontMatter::from(r"---
+date: 2022-03-07T09:15:00
+"),
+            FrontMatter{
+                date: Some(NaiveDate::from_ymd(2022, 03, 07).and_hms(9,15,0)),
+                raw: String::from(r"---
+                date: 2022-03-07T09:15:00
+                "),
+                ..Default::default()
+            }
+        );
     }
 }
