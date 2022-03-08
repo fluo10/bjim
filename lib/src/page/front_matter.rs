@@ -10,15 +10,11 @@ use serde_yaml;
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FrontMatter {
-    #[serde(default)]
     title: Option<String>,
-    #[serde(default)]
+    #[serde(with = "date_format")]
     date: Option<NaiveDateTime>,
-    #[serde(default)]
     categories: Vec<String>,
-    #[serde(default)]
     tags: Vec<String>,
-    #[serde(default)]
     //spent_time: f32,
     #[serde(skip)]
     pub raw: String,
@@ -52,6 +48,37 @@ impl From<&str> for FrontMatter {
         let mut f: FrontMatter = serde_yaml::from_str(s).unwrap();
         f.raw = String::from(s);
         f
+    }
+}
+
+mod date_format {
+    use chrono::{NaiveDate, NaiveDateTime};
+    use serde::{self, Deserialize, Serializer, Deserializer};
+
+    const FORMAT: &'static str = "%Y-%m-%dT%H:%M";
+
+    pub fn serialize<S>(
+        date: &Option<NaiveDateTime>,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let s = format!("{}", date.unwrap().format(FORMAT));
+        serializer.serialize_str(&s)
+    }
+
+    pub fn deserialize<'de, D> (
+        deserializer: D,
+    ) -> Result<Option<NaiveDateTime>, D::Error>
+    where 
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        match NaiveDateTime::parse_from_str(&s, FORMAT){
+            Ok(x) => Ok(Some(x)),
+            Err(e) => Err(serde::de::Error::custom(e)),
+        }
     }
 }
 
