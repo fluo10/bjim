@@ -1,4 +1,4 @@
-mod regular_log;
+mod template;
 mod tag;
 
 pub use tag::TagConfig;
