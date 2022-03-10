@@ -88,7 +88,10 @@ impl RegularPathFormat {
         self.regex.is_match(s)
     }
     
-    pub fn find_last_path(&self, date: NaiveDate, paths: &Vec<&Path>) -> Option<PathBuf> {
+    pub fn find_latest_path(&self, paths: &[&Path]) -> Option<PathBuf> {
+        let mut paths: Vec<&Path> = paths.to_vec();
+        paths.sort();
+        paths.reverse();
         for path in paths {
             if self.match_format(path.to_str().unwrap()) {
                 return Some(path.to_path_buf());
@@ -123,5 +126,17 @@ mod tests {
             NaiveDate::from_ymd(2022, 01, 01),
             PathBuf::from("2022/01/01"),
         );
+    }
+
+    #[test]
+    fn find_latest_path() {
+        let paths: Vec<&Path> =  vec![
+            &Path::new("2022/02/03"),
+            &Path::new("2022/09/12"),
+            &Path::new("2021/04/02"),
+        ];
+        let format = RegularPathFormat::new("%Y/%m/%d").unwrap();
+        assert_eq!(format.find_latest_path(&paths).unwrap(), format.get_path(NaiveDate::from_ymd(2022, 09, 12)));
+
     }
 }
