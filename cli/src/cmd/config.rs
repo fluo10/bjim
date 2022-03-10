@@ -12,7 +12,7 @@ pub struct ConfigCmd {
 
 impl ConfigCmd {
     pub fn run(&self) {
-        let config = self.global.get_config();
-        config.show();
+        self.global.init_config();
+        Config::global().show();
     }
 }

@@ -14,9 +14,9 @@ pub struct CheckCmd {
 
 impl CheckCmd {
     pub fn run(&self) {
-        
-        let journal = self.global.get_journal();
-        for page in journal.data.pages.into_iter() {
+        self.global.init_config(); 
+        let journal = Journal::new().unwrap();
+        for page in journal.pages.into_iter() {
             println!("{}", page.path.display() );
         }
     }

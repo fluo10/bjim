@@ -55,10 +55,9 @@ impl Config {
         Ok(Self::from_toml(contents.as_str()))
     }
 
-
     pub fn discover(path: &AsRef<Path>) -> Result<Self>{
-        const LOCAL_CONFIG_NAME: &str = ".sbjo/config.toml";
-        const USER_CONFIG_NAME: &str = "sbjo/config.toml";
+        const LOCAL_CONFIG_NAME: &str = ".bjim/config.toml";
+        const USER_CONFIG_NAME: &str = "bjim/config.toml";
         let mut local_config_path: PathBuf =  Repository::discover(path.as_ref()).unwrap().workdir().unwrap().to_path_buf();
         local_config_path.push(LOCAL_CONFIG_NAME);
 

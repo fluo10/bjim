@@ -14,9 +14,10 @@ pub struct ListCmd {
 
 impl ListCmd {
     pub fn run(&self) {
-        let mut journal = self.global.get_journal();
-        journal.data.read();
-        for page in journal.data.pages.into_iter().filter_map(|page|{
+        self.global.init_config();
+        let mut journal = Journal::new().unwrap();
+        journal.read();
+        for page in journal.pages.into_iter().filter_map(|page|{
             if page.has_open_task {
                Some(page)
             } else {

@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use clap::Args;
 use lib::{Config, Journal};
 use std::env;
@@ -14,25 +15,20 @@ pub struct GlobalArgs {
 }
 
 impl GlobalArgs {
-    pub fn get_config(&self) -> Config {
-        match (self.config_path.clone(), self.journal_dir.clone()) {
-            (Some(x), Some(y)) => {
-                let mut config = Config::from_path(&x).unwrap();
-                config.data_dir = y;
-                config
-            },
-            (Some(x), None) => {
-                Config::from_path(&x).unwrap()
+    pub fn init_config(&self) -> Result<()> {
+
+        let mut config: Config = match self.config_path.as_ref() {
+            Some(x) => Config::from_path(&x.as_path())?,
+            None => match &self.journal_dir {
+                Some(x) => Config::discover(&x)?,
+                None => Config::discover(&env::current_dir().unwrap())?,
             }
-            (None, Some(x)) => {
-                Config::discover(&x).unwrap()
-            },
-            (None, None) => {
-                Config::discover(&env::current_dir().unwrap()).unwrap()
-            },
+        };
+
+        if let Some(x) = &self.journal_dir {
+            config.data_dir = x.clone();
         }
-    }
-    pub fn get_journal(&self) -> Journal {
-        Journal::from_config(self.get_config()).unwrap()
+        config.globalize();
+        Ok(())
     }
 }
