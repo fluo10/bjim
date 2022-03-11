@@ -1,8 +1,8 @@
 use std::collections::{HashMap};
-use std::convert::{From, TryFrom};
+use std::convert::{From};
 use std::default::Default;
 
-use anyhow::Result;
+
 use chrono::{NaiveDate, NaiveDateTime};
 use regex::Regex;
 use serde::Deserialize;
@@ -56,7 +56,7 @@ impl From<&str> for FrontMatter {
 }
 
 mod date_format {
-    use chrono::{NaiveDate, NaiveDateTime};
+    use chrono::{NaiveDateTime};
     use serde::{self, Deserialize, Serializer, Deserializer};
 
     const FORMAT: &'static str = "%Y-%m-%dT%H:%M";

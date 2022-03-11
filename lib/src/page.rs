@@ -5,12 +5,12 @@ mod bullet;
 mod tag;
 
 //mod task;
-use std::env;
+
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 use std::fs::{File, OpenOptions};
 use std::io::prelude::*;
-use std::io::{BufRead, BufReader, Write, BufWriter};
+use std::io::{Write, BufWriter};
 use regex::Regex;
 use chrono::Local;
 
@@ -70,9 +70,9 @@ impl Page {
         Self::migrate(self, page);
     }
     fn migrate(src: &mut Page, dst: &mut Self) {
-        let mut src_content: &mut PageContent = src.content.as_mut().unwrap();
+        let src_content: &mut PageContent = src.content.as_mut().unwrap();
         match (&src.front_matter, &dst.front_matter) {
-            (Some(x), None) => {
+            (Some(_x), None) => {
                 dst.front_matter = src.front_matter.clone();
                 dst.front_matter.as_mut().unwrap().update_date(Local::today().naive_local());
             },
@@ -100,7 +100,7 @@ impl Page {
     }
     fn join_content(&mut self) {
         self.raw_content = match &self.front_matter {
-            Some(x) => String::from("---\n") +  self.front_matter.as_ref().unwrap().raw.as_str() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
+            Some(_x) => String::from("---\n") +  self.front_matter.as_ref().unwrap().raw.as_str() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
             None => String::from(self.content.as_ref().unwrap().raw.as_str()),
         };
         

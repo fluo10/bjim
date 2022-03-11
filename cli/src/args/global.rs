@@ -1,7 +1,7 @@
-use anyhow::{bail, Result};
+use anyhow::{Result};
 use clap::Args;
 use git2::Repository;
-use lib::{Config, Journal};
+use lib::{Config};
 use std::env;
 use std::path::{PathBuf};
 

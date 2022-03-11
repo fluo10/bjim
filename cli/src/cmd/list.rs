@@ -1,8 +1,8 @@
 pub use clap::Parser;
-use super::Command;
-use std::fs;
+
+
 use crate::args::GlobalArgs;
-use lib::{Journal, Config};
+use lib::{Journal};
 
 #[derive(Parser)]
 pub struct ListCmd {

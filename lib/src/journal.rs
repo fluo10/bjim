@@ -1,10 +1,10 @@
 use super::page::Page;
 use crate::Config;
 use std::convert::AsRef;
-use std::path::{Path, PathBuf};
+
 //use super::page::Page;
-use walkdir::WalkDir;
-use std::collections::HashMap;
+
+
 use anyhow::Result;
 
 pub struct Journal{
@@ -33,7 +33,7 @@ impl Journal {
         }
     }
     pub fn read(&mut self) {
-        for mut page in &mut self.pages {
+        for page in &mut self.pages {
             page.read();
         }
     }

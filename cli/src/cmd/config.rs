@@ -1,7 +1,7 @@
 pub use clap::Parser;
 use super::super::args::GlobalArgs;
-use std::fs;
-use lib::{Journal, Config};
+
+use lib::{Config};
 
 #[derive(Parser)]
 pub struct ConfigCmd {

@@ -1,8 +1,8 @@
 pub use clap::Parser;
-use super::Command;
+
 use crate::args::GlobalArgs;
-use std::fs;
-use lib::{Journal, Config};
+
+use lib::{Journal};
 
 #[derive(Parser)]
 pub struct CheckCmd {

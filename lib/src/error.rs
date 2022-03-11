@@ -1,7 +1,7 @@
 use std::fmt;
 use std::error::Error as StdError;
 use std::convert::From;
-use std::fmt::Result;
+
 
 #[derive(Debug, Clone)]
 pub struct Error{

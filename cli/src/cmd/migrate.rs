@@ -18,7 +18,7 @@ impl MigrateCmd {
     pub fn run(&self) {
         println!("Execute migrate");
         let mut src_paths: Vec<PathBuf> = self.paths.clone();
-        let mut dst_path: PathBuf = src_paths.pop().unwrap();
+        let dst_path: PathBuf = src_paths.pop().unwrap();
         if src_paths.len() > 2 {
             if dst_path.is_file() {
                 println!("Destination is not dir!");

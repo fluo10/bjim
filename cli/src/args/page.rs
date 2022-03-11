@@ -1,5 +1,5 @@
 //! A module for searching files with filtering
-use chrono::{Date, Local};
+
 use clap::Args;
 
 #[derive(Args)]

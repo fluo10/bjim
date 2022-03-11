@@ -7,8 +7,8 @@ use template::RegularLogTemplate;
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
 use std::convert::{AsRef, TryFrom};
-use std::env;
-use std::io;
+
+
 use std::default::Default;
 use std::fmt::Debug;
 use std::fs::File;
@@ -16,14 +16,14 @@ use std::io::prelude::*;
 
 use anyhow::{bail,Error, Result};
 use dirs::{config_dir, home_dir};
-use git2::Repository;
+
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use toml::Value;
+
 
 static INSTANCE: OnceCell<Config> = OnceCell::new();
 
-pub fn get_local_config_path(path: &AsRef<Path>) -> PathBuf {
+pub fn get_local_config_path(path: &dyn AsRef<Path>) -> PathBuf {
     let mut path: PathBuf = path.as_ref().to_path_buf();
     path.push(".bjim");
     path.push("config.toml");
@@ -65,7 +65,7 @@ impl Config {
         return config;
     }
 
-    pub fn from_path(path: &AsRef<Path>) -> Result<Self> {
+    pub fn from_path(path: &dyn AsRef<Path>) -> Result<Self> {
         let mut f = File::open(path)?;
         let mut contents = String::new();
         f.read_to_string(&mut contents)
@@ -92,7 +92,7 @@ impl Config {
     }
     */
 
-    pub fn from_journal_dir(path: &AsRef<Path>) -> Result<Config> {
+    pub fn from_journal_dir(path: &dyn AsRef<Path>) -> Result<Config> {
         let config_path = get_local_config_path(path);
         let mut config: Config = Config::from_path(&config_path)?;
         if config.data_dir.as_path() == PathBuf::from(".") {
@@ -100,7 +100,7 @@ impl Config {
         }
         Ok(config)
     }
-    pub fn from_path_and_journal_dir(path: &AsRef<Path>, journal_dir: &AsRef<Path>) -> Result<Config> {
+    pub fn from_path_and_journal_dir(path: &dyn AsRef<Path>, journal_dir: &dyn AsRef<Path>) -> Result<Config> {
         let mut config: Config = Config::from_path(path)?;
         config.data_dir = journal_dir.as_ref().to_path_buf();
         Ok(config)
@@ -115,7 +115,7 @@ impl Config {
     pub fn globalize(self) -> Result<()> {
         match INSTANCE.set(self) {
             Ok(()) => Ok(()),
-            Err(x) => bail!("Failed to globalize config"),
+            Err(_x) => bail!("Failed to globalize config"),
         }
     }
     pub fn show(&self){
