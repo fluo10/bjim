@@ -12,7 +12,13 @@ pub struct ConfigCmd {
 
 impl ConfigCmd {
     pub fn run(&self) {
-        self.global.init_config();
-        Config::global().show();
+        match self.global.init_config(){
+            Ok(()) => {
+                Config::global().show();
+            },
+            Err(x) => {
+                eprintln!("{}",x);
+            }
+        }
     }
 }

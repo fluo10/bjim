@@ -11,3 +11,4 @@ anyhow = "1.0.54"
 lib = { package = "bjim-lib", path = "../lib" }
 chrono = { version = "0.4.19" }
 clap = { version = "3.0.1", features = ["derive"] }
+git2 = "0.13"

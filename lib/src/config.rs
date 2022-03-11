@@ -2,10 +2,11 @@ mod template;
 mod tag;
 
 pub use tag::TagConfig;
+use template::RegularLogTemplate;
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
-use std::convert::AsRef;
+use std::convert::{AsRef, TryFrom};
 use std::env;
 use std::io;
 use std::default::Default;
@@ -13,30 +14,47 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
 
-use anyhow::{bail,Result};
+use anyhow::{bail,Error, Result};
 use dirs::{config_dir, home_dir};
 use git2::Repository;
 use once_cell::sync::OnceCell;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use toml::Value;
 
 static INSTANCE: OnceCell<Config> = OnceCell::new();
 
-#[derive(PartialEq, Deserialize, Debug,)]
+pub fn get_local_config_path(path: &AsRef<Path>) -> PathBuf {
+    let mut path: PathBuf = path.as_ref().to_path_buf();
+    path.push(".bjim");
+    path.push("config.toml");
+    path
+}
+pub fn get_user_config_path() -> Option<PathBuf> {
+    let mut path :PathBuf = config_dir()?;
+    path.push("bjim");
+    path.push("config.toml");
+    Some(path)
+}
+
+#[derive(Deserialize, Serialize, Debug,)]
 pub struct Config {
 
     #[serde(default,)]
     pub data_dir: PathBuf,
 
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, TagConfig>,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub templates: Vec<RegularLogTemplate>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-             data_dir: Repository::discover(env::current_dir().unwrap()).unwrap().workdir().unwrap().to_path_buf(),
+             data_dir: PathBuf::from("."),
              tags: HashMap::new(),
+             templates: Vec::new(),
         }
     }
 }
@@ -47,14 +65,14 @@ impl Config {
         return config;
     }
 
-    pub fn from_path(path: &Path) -> Result<Self> {
-        let mut f = File::open(path).expect("file not found");
+    pub fn from_path(path: &AsRef<Path>) -> Result<Self> {
+        let mut f = File::open(path)?;
         let mut contents = String::new();
         f.read_to_string(&mut contents)
             .expect("something went wrong reading the file");
-        Ok(Self::from_toml(contents.as_str()))
+        Ok(Self::try_from(contents.as_str())?)
     }
-
+    /*
     pub fn discover(path: &AsRef<Path>) -> Result<Self>{
         const LOCAL_CONFIG_NAME: &str = ".bjim/config.toml";
         const USER_CONFIG_NAME: &str = "bjim/config.toml";
@@ -72,68 +90,91 @@ impl Config {
             bail!("Not found")
         }
     }
+    */
+
+    pub fn from_journal_dir(path: &AsRef<Path>) -> Result<Config> {
+        let config_path = get_local_config_path(path);
+        let mut config: Config = Config::from_path(&config_path)?;
+        if config.data_dir.as_path() == PathBuf::from(".") {
+            config.data_dir = path.as_ref().to_path_buf();
+        }
+        Ok(config)
+    }
+    pub fn from_path_and_journal_dir(path: &AsRef<Path>, journal_dir: &AsRef<Path>) -> Result<Config> {
+        let mut config: Config = Config::from_path(path)?;
+        config.data_dir = journal_dir.as_ref().to_path_buf();
+        Ok(config)
+    }
+    pub fn from_user_config() -> Result<Config> {
+        let path: PathBuf = get_user_config_path().ok_or(anyhow::anyhow!("User config not found"))?;
+        Ok(Config::from_path(&path)?)
+    }
     pub fn global() -> &'static Config {
         INSTANCE.get().expect("Config is not initialized")
     }
-    pub fn globalize(self) {
-        INSTANCE.set(self).unwrap();
+    pub fn globalize(self) -> Result<()> {
+        match INSTANCE.set(self) {
+            Ok(()) => Ok(()),
+            Err(x) => bail!("Failed to globalize config"),
+        }
     }
-    //#[cfg(test)]
     pub fn show(&self){
-        println!("{}", self.data_dir.to_str().unwrap());
+        
+        println!("{}", self.to_string().unwrap());
     }
+    pub fn to_string(&self) -> Result<String> {
+        let result = toml::to_string(self)?;
+        Ok(result)
+    }
+}
 
-    pub fn from_toml(raw : &str) -> Self {
-        let mut config:Self = toml::from_str(raw).unwrap();
+impl TryFrom<&str> for Config {
+    type Error = Error;
+    fn try_from(raw : &str) -> Result<Self> {
+        let mut config:Self = toml::from_str(raw)?;
         if config.data_dir.starts_with("~/") {
             
             let leaf = config.data_dir.strip_prefix("~").unwrap().to_str();
             config.data_dir = home_dir().unwrap().join(leaf.unwrap());
         }
-        config
+        Ok(config)
     }
-
-
-
-
-    
-//    pub fn new( path: Option<Path> ) => Config {
-//        match path {
-//            Some(path) => 
-//        date: Option<date>,
-//        
-//        println!(dirs::config_dir)
-//
-//        .config/sbjo/sbjo.conf
-//        todo!;
-//    }
 }
 
 #[cfg(test)]
 mod tests {
 
     use super::*; 
+
+    fn assert_parse(s: &str, c: Config) {
+        assert_eq!(
+            Config::try_from(s).unwrap(),
+            c
+        );
+    }
     
     #[test]
     fn parse_string_all() {
-        let fromtoml = Config::from_toml(r##"data_dir = "/home/test/"
-[tags.default]
-"##);
         let mut config = Config{
             data_dir : PathBuf::from("/home/test/"),
-            tags : HashMap::new(),
+            ..Config::default()
         };
         config.tags.insert(String::from("default"), TagConfig::default());
-        assert_eq!(fromtoml, config);
+        assert_parse(
+            r##"data_dir = "/home/test/"
+[tags.default]
+"##,
+            config
+        );
     }
     
     fn parse_string_min() {
-        let fromtoml = Config::from_toml(r##"data_dir = "/home/test/"##);
+        let fromtoml = Config::try_from(r##"data_dir = "/home/test/"##);
         
         let config = Config{
             data_dir : PathBuf::from("/home/test/"),
-            tags : HashMap::new(),
+            ..Config::default()
         };
-        assert_eq!(fromtoml, config);
+        assert_eq!(r##"data_dir = "/home/test/"##, config);
     }
 }

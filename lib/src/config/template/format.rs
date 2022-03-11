@@ -3,10 +3,13 @@ use std::path::{Path, PathBuf};
 use std::convert::TryFrom;
 
 use anyhow::{bail, Error, Result};
-use chrono::{Date, Datelike, Duration, Local, NaiveDate, NaiveDateTime, Utc};
+use chrono::{NaiveDate, Utc};
 use regex::{escape, Regex};
 use once_cell::sync::OnceCell;
+use serde::{Deserialize, Serialize};
+use toml::Value;
 
+#[derive(Clone, Debug)]
 pub enum ValidInterval {
     Daily,
     Weekly,
@@ -14,6 +17,7 @@ pub enum ValidInterval {
     Yearly,
 }
 
+/// Preset template for regularly log like daily log
 impl TryFrom<&str> for ValidInterval {
     type Error = anyhow::Error;
     fn try_from(s: &str) -> Result<Self> {
@@ -49,6 +53,8 @@ impl TryFrom<&str> for ValidInterval {
     }
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug,)]
+#[serde(try_from = "&str", into = "String")]
 pub struct RegularPathFormat {
     
     /// Use to generate path from date
@@ -59,14 +65,6 @@ pub struct RegularPathFormat {
 }
 
 impl RegularPathFormat {
-    pub fn new(f: &str) -> Result<Self> {
-        let result = RegularPathFormat{
-            format: f.to_string(),
-            regex: Self::date_format_to_regex(f)?,
-            interval: ValidInterval::try_from(f)?,
-        };
-        Ok(result)
-    }
     fn date_format_to_pattern(f: &str) -> String {
         static FOUR_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
         static TWO_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
@@ -106,10 +104,26 @@ impl RegularPathFormat {
         self.get_path(Utc::today().naive_local())
     }
 }
-
+impl Into<String> for RegularPathFormat {
+    fn into(self) -> String {
+        self.format
+    }
+}
+impl TryFrom<&str> for RegularPathFormat {
+    type Error = anyhow::Error;
+    fn try_from(f: &str) -> Result<Self> {
+        let result = RegularPathFormat{
+            format: f.to_string(),
+            regex: Self::date_format_to_regex(f)?,
+            interval: ValidInterval::try_from(f)?,
+        };
+        Ok(result)
+    }
+}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::*;
     #[test]
     fn regex() {
         assert!(RegularPathFormat::date_format_to_regex("%Y/%m/%d").unwrap().is_match("2022/02/02"));
@@ -135,7 +149,7 @@ mod tests {
             &Path::new("2022/09/12"),
             &Path::new("2021/04/02"),
         ];
-        let format = RegularPathFormat::new("%Y/%m/%d").unwrap();
+        let format = RegularPathFormat::try_from("%Y/%m/%d").unwrap();
         assert_eq!(format.find_latest_path(&paths).unwrap(), format.get_path(NaiveDate::from_ymd(2022, 09, 12)));
 
     }

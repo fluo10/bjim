@@ -1,12 +1,12 @@
 
 use std::default::Default;
 use anyhow::{bail, Result};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use toml::Value;
 
 /// Assigned role for tag
 /// The tags assigned are used with migration, filtering entry, etc.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum AssignedTag {
     /// Entry including this tag will not be deleted but reopen by each migration
     Repeat,
@@ -17,7 +17,7 @@ pub enum AssignedTag {
 }
 
 /// The type of value trailing tag.
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum TagValueType {
     None,
     Date,
@@ -26,7 +26,7 @@ pub enum TagValueType {
     Number,
 }
 
-#[derive(PartialEq, Deserialize, Debug, )]
+#[derive(PartialEq, Deserialize, Serialize, Debug, )]
 #[serde(default)]
 pub struct TagConfig {
 

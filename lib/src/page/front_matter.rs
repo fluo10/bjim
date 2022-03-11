@@ -1,3 +1,4 @@
+use std::collections::{HashMap};
 use std::convert::{From, TryFrom};
 use std::default::Default;
 
@@ -18,6 +19,8 @@ pub struct FrontMatter {
     //spent_time: f32,
     #[serde(skip)]
     pub raw: String,
+    #[serde(flatten)]
+    extra: HashMap<String, String>,
 }
 
 
@@ -37,6 +40,7 @@ impl Default for FrontMatter{
             date: None,
             tags: Vec::new(),
             categories: Vec::new(),
+            extra: HashMap::new(),
             raw: String::new(),            
         }
     }
