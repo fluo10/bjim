@@ -9,7 +9,7 @@ use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ValidInterval {
     Daily,
     Weekly,
@@ -53,7 +53,7 @@ impl TryFrom<&str> for ValidInterval {
     }
 }
 
-#[derive(Deserialize, Serialize, Clone, Debug,)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(try_from = "&str", into = "String")]
 pub struct RegularPathFormat {
     
@@ -109,6 +109,12 @@ impl Into<String> for RegularPathFormat {
         self.format
     }
 }
+
+impl PartialEq for RegularPathFormat {
+    fn eq(&self, other: &Self) -> bool {
+        self.format == other.format
+    }
+}
 impl TryFrom<&str> for RegularPathFormat {
     type Error = anyhow::Error;
     fn try_from(f: &str) -> Result<Self> {
@@ -132,7 +138,7 @@ mod tests {
     #[test]
     fn convert_path() {
         fn test_format(format: &str, date: NaiveDate, path: PathBuf) {
-            let template = RegularPathFormat::new(format).unwrap();
+            let template = RegularPathFormat::try_from(format).unwrap();
             assert_eq!(template.get_path(date), path);
         }
         test_format(

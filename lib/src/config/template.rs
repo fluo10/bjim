@@ -1,6 +1,6 @@
 mod format;
 
-use format::RegularPathFormat;
+pub use format::RegularPathFormat;
 
 use std::path::{PathBuf};
 use anyhow::{Result};
@@ -11,19 +11,19 @@ use serde::{Deserialize, Serialize};
 
 
 /// Preset template for regularly log like daily log
-#[derive(Deserialize, Serialize, Debug,)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct RegularLogTemplate {
 
 
 
     /// If true, this log is automatically created with update command
     /// Auto migration require `path_format` including `.md` extension 
-    auto_migration: bool,
+    pub auto_migration: bool,
 
     /// If set, soft link to the latest file will be created or updated by each `update`
-    link_path: Option<PathBuf>,
+    pub link_path: Option<PathBuf>,
     
-    path_format: Option<RegularPathFormat>,
+    pub path_format: Option<RegularPathFormat>,
 }
 
 

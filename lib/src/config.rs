@@ -2,7 +2,7 @@ mod template;
 mod tag;
 
 pub use tag::TagConfig;
-use template::RegularLogTemplate;
+use template::{RegularLogTemplate, RegularPathFormat};
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
@@ -36,7 +36,7 @@ pub fn get_user_config_path() -> Option<PathBuf> {
     Some(path)
 }
 
-#[derive(Deserialize, Serialize, Debug,)]
+#[derive(Deserialize, Serialize, Debug, PartialEq)]
 pub struct Config {
 
     #[serde(default,)]
@@ -45,16 +45,16 @@ pub struct Config {
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, TagConfig>,
 
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub templates: Vec<RegularLogTemplate>,
+    #[serde(default, skip_serializing_if = "HashMap::is_empty")]
+    pub templates: HashMap<String, RegularLogTemplate>,
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-             data_dir: PathBuf::from("."),
-             tags: HashMap::new(),
-             templates: Vec::new(),
+            data_dir: PathBuf::from("."),
+            tags: HashMap::new(),
+            templates: HashMap::new(),
         }
     }
 }
@@ -155,26 +155,49 @@ mod tests {
     
     #[test]
     fn parse_string_all() {
-        let mut config = Config{
-            data_dir : PathBuf::from("/home/test/"),
-            ..Config::default()
+        let mut config: Config = Config{
+            data_dir: PathBuf::from("."),
+            tags: HashMap::from([
+                (
+                    "Routine".to_string(),
+                    TagConfig{
+                        repeat: true,
+                        ..TagConfig::default()
+                    }
+                ),
+            ]),
+            templates: HashMap::from([
+                (
+                    "Dailylog".to_string(),
+                    RegularLogTemplate{
+                        path_format: Some(RegularPathFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
+                        auto_migration: true,
+                        ..Default::default()
+                    }
+                )
+            ]),
         };
-        config.tags.insert(String::from("default"), TagConfig::default());
+        let toml = r#"
+data_dir = "."
+[tags.Routine]
+repeat = true
+inherit = true
+migrate = true
+[templates.Dailylog]
+auto_migration = true
+path_format = "dailylog/%Y/%m/%d""#;
         assert_parse(
-            r##"data_dir = "/home/test/"
-[tags.default]
-"##,
+            toml,
             config
         );
     }
     
     fn parse_string_min() {
-        let fromtoml = Config::try_from(r##"data_dir = "/home/test/"##);
         
         let config = Config{
             data_dir : PathBuf::from("/home/test/"),
             ..Config::default()
         };
-        assert_eq!(r##"data_dir = "/home/test/"##, config);
+        assert_parse(r##"data_dir = "/home/test/"##, config);
     }
 }

@@ -8,8 +8,6 @@ use serde::{Deserialize, Serialize};
 /// The tags assigned are used with migration, filtering entry, etc.
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum AssignedTag {
-    /// Entry including this tag will not be deleted but reopen by each migration
-    Repeat,
     StartDate,
     CloseDate,
     DueDate,
@@ -29,25 +27,27 @@ pub enum TagValueType {
 #[derive(PartialEq, Deserialize, Serialize, Debug, )]
 #[serde(default)]
 pub struct TagConfig {
-
+    /// Entry including this tag will not be deleted but reopen by each migration
+    pub repeat: bool,
     /// If false, this tags will not inherit to child entries
-    inherit: bool,
+    pub inherit: bool,
 
     /// If false, this tag will not be copied with migration
-    migrate: bool,
+    pub migrate: bool,
 
     /// The type of value trailing tag.
     /// If `None`, it's not checked.
-    value_type: Option<TagValueType>,
+    pub value_type: Option<TagValueType>,
 
     /// Assigned role of tag.
     /// This referred when migration, filtering, etc.
-    assigned: Option<AssignedTag>,
+    pub assigned: Option<AssignedTag>,
 }
 
 impl TagConfig {
     pub const fn new() -> Self {
         Self{
+            repeat: false,
             inherit: true,
             migrate: true,
             value_type: None,
