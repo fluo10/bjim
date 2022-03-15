@@ -49,7 +49,10 @@ impl Default for FrontMatter{
 
 impl From<&str> for FrontMatter {
     fn from(s: &str) -> Self{
-        let mut f: FrontMatter = serde_yaml::from_str(s).unwrap();
+        let mut f: FrontMatter = match serde_yaml::from_str(s) {
+            Ok(x) => x,
+            Err(e) => FrontMatter::default(),
+        };
         f.raw = String::from(s);
         f
     }

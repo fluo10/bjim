@@ -70,6 +70,7 @@ impl Page {
         Self::migrate(self, page);
     }
     fn migrate(src: &mut Page, dst: &mut Self) {
+        println!("Migrating {:?} to {:?}", &src.path, &dst.path);
         let src_content: &mut PageContent = src.content.as_mut().unwrap();
         match (&src.front_matter, &dst.front_matter) {
             (Some(_x), None) => {
