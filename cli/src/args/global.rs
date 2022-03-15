@@ -1,9 +1,12 @@
+use anyhow::{Error, Result};
 use clap::Args;
-use lib::{Config, Journal};
+use git2::Repository;
+use lib::{Config};
 use std::env;
 use std::path::{PathBuf};
+use std::convert::TryInto;
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 pub struct GlobalArgs {
     #[clap(short, long, from_global)]
     pub config_path: Option<PathBuf>,
@@ -14,25 +17,44 @@ pub struct GlobalArgs {
 }
 
 impl GlobalArgs {
-    pub fn get_config(&self) -> Config {
-        match (self.config_path.clone(), self.journal_dir.clone()) {
-            (Some(x), Some(y)) => {
-                let mut config = Config::from_path(&x).unwrap();
-                config.data_dir = y;
-                config
-            },
-            (Some(x), None) => {
-                Config::from_path(&x).unwrap()
-            }
-            (None, Some(x)) => {
-                Config::discover(&x).unwrap()
-            },
-            (None, None) => {
-                Config::discover(&env::current_dir().unwrap()).unwrap()
-            },
-        }
+    pub fn to_config(&self) -> Result<Config> {
+        let config: Config = self.clone().try_into()?;
+        Ok(config)
     }
-    pub fn get_journal(&self) -> Journal {
-        Journal::from_config(self.get_config()).unwrap()
+}
+
+impl TryInto<Config> for GlobalArgs  {
+    type Error = Error;
+    fn try_into(self) -> Result<Config> {
+        fn get_current_git_dir() -> Result<PathBuf> {
+            let git_dir: PathBuf = Repository::discover(env::current_dir()?)?.workdir().unwrap().to_path_buf();
+            Ok(git_dir)
+        }
+        let mut config: Config = match (&self.config_path, &self.journal_dir) {
+            (Some(c), Some(j)) => {
+                Config::from_path_and_journal_dir(&c, &j)?
+            },
+            (Some(c), None) => {
+                Config::from_path(c)?
+            },
+            (None, x) => {
+                let result = match x {
+                    Some(j) => {
+                        Config::from_journal_dir(&j)
+                    },
+                    None => {
+                        Config::from_journal_dir(&get_current_git_dir()?)
+                    }
+                };
+                match result {
+                    Ok(x) => x,
+                    Err(_) => Config::default(),
+                }
+            },
+        };
+        if let Some(x) = &self.journal_dir {
+            config.data_dir = x.clone();
+        }
+        Ok(config)
     }
 }

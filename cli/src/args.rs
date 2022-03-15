@@ -1,7 +1,7 @@
 mod global;
 mod page;
-mod write;
+mod mode;
 
 pub use global::GlobalArgs;
 pub use page::PageArgs;
-pub use write::WriteArgs;
+pub use mode::ModeArgs;

@@ -1,22 +1,22 @@
 pub use clap::Parser;
-use super::Command;
+
 use crate::args::GlobalArgs;
-use std::fs;
-use lib::{Journal, Config};
+
+use lib::{Journal};
 
 #[derive(Parser)]
 pub struct CheckCmd {
     #[clap(short, long)]
     pub open: bool,
     #[clap(flatten)]
-    pub global: GlobalArgs,
+    pub global_args: GlobalArgs,
 }
 
 impl CheckCmd {
     pub fn run(&self) {
-        
-        let journal = self.global.get_journal();
-        for page in journal.data.pages.into_iter() {
+        self.global_args.to_config().unwrap().globalize(); 
+        let journal = Journal::new().unwrap();
+        for page in journal.pages.into_iter() {
             println!("{}", page.path.display() );
         }
     }

@@ -1,22 +1,23 @@
 pub use clap::Parser;
-use super::Command;
-use std::fs;
+
+
 use crate::args::GlobalArgs;
-use lib::{Journal, Config};
+use lib::{Journal};
 
 #[derive(Parser)]
 pub struct ListCmd {
     #[clap(short, long)]
     pub task_open: bool,
     #[clap(flatten)]
-    pub global: GlobalArgs,
+    pub global_args: GlobalArgs,
 }
 
 impl ListCmd {
     pub fn run(&self) {
-        let mut journal = self.global.get_journal();
-        journal.data.read();
-        for page in journal.data.pages.into_iter().filter_map(|page|{
+        self.global_args.to_config().unwrap().globalize();
+        let mut journal = Journal::new().unwrap();
+        journal.read();
+        for page in journal.pages.into_iter().filter_map(|page|{
             if page.has_open_task {
                Some(page)
             } else {

@@ -1,6 +1,6 @@
 pub use clap::Parser;
 pub use std::path::PathBuf;
-use std::fs;
+use std::fs::{create_dir, read_dir};
 use crate::args::GlobalArgs;
 use lib::Page;
 
@@ -10,44 +10,54 @@ pub struct MigrateCmd {
     pub dry_run: bool,
     #[clap(flatten)]
     global: GlobalArgs,
-    #[clap(name="source", value_name="FILE")]
-    pub src_path: PathBuf,
-    #[clap(name="Destination", value_name="FILE")]
-    pub dst_path: PathBuf,
-
+    #[clap(min_values=2, value_names=&["SOURCE", "DESTINATION"])]
+    pub paths: Vec<PathBuf>,
 }
 
 impl MigrateCmd {
     pub fn run(&self) {
         println!("Execute migrate");
+        let mut src_paths: Vec<PathBuf> = self.paths.clone();
+        let dst_path: PathBuf = src_paths.pop().unwrap();
+        if src_paths.len() > 2 {
+            if dst_path.is_file() {
+                println!("Destination is not dir!");
+                ()
+            } else if !dst_path.exists() {
+                create_dir(&dst_path);
+            }
+            assert!(dst_path.is_dir())
+        }
+
         let mut src_pages: Vec<Page> = Vec::new();
         let mut dst_pages: Vec<Page> = Vec::new();
         
-        if self.src_path.is_file() {
-           src_pages.push(Page::new(&self.src_path));
-        } else if self.src_path.is_dir() {
-            for entry in fs::read_dir(self.src_path.as_path()).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if path.is_file() {
-                    src_pages.push(Page::new(&self.src_path));
+        for path in src_paths {
+            if path.is_file() {
+                src_pages.push(Page::new(&path));
+            } else if path.is_dir() {
+                for entry in read_dir(path.as_path()).unwrap() {
+                    let entry = entry.unwrap();
+                    let path = entry.path();
+                    if path.is_file() {
+                        src_pages.push(Page::new(&path));
+                    }
                 }
+            } else {
+                panic!();
             }
-        } else {
-            panic!();
         }
-        if self.dst_path.is_dir(){
+        if dst_path.is_dir(){
             for page in src_pages.iter() {
                 let filename = page.path.file_name().unwrap();
-                let mut path = self.dst_path.clone();
+                let mut path = dst_path.clone();
                 path.push(filename);
                 dst_pages.push(Page::new(path));
             }
-        } else if self.dst_path.is_file() & (src_pages.len() == 1) {
-            dst_pages.push(Page::new(&self.dst_path));
         } else {
-            panic!();
+            dst_pages.push(Page::new(dst_path));
         }
+        assert_eq!(src_pages.len(), dst_pages.len());
         for (mut src_page, mut dst_page) in src_pages.into_iter().zip(dst_pages.into_iter()) {
             src_page.read();
             src_page.migrate_to(&mut dst_page);

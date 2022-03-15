@@ -1,16 +1,19 @@
 [package]
 name = "bjim-lib"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.54"
 chrono = { version = "0.4.19", features = ["serde"] }
-git2 = "0.13"
 dirs = "4.0.0"
-walkdir = "2.3.2"
-serde = { version = "1.0", features = ["derive"] }
-toml = "0.5.8"
+git2 = "0.13"
+once_cell = "1.9.0"
 regex = "1.5"
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.8"
+toml = "0.5.8"
+walkdir = "2.3.2"

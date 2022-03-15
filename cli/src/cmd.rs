@@ -2,13 +2,15 @@ mod check;
 mod list;
 mod config;
 mod migrate;
+mod update;
+
 pub use check::CheckCmd;
 pub use lib::{Config, Journal};
-use std::io::{Error, Result, ErrorKind};
 pub use list::ListCmd;
 pub use config::ConfigCmd;
 pub use migrate::MigrateCmd;
-use std::path::PathBuf;
+pub use update::UpdateCmd;
+
 
 pub use clap::Args;
 
