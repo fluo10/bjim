@@ -1,6 +1,7 @@
 use super::page::Page;
 use crate::Config;
 use std::convert::AsRef;
+use std::path::{Path, PathBuf};
 
 //use super::page::Page;
 
@@ -40,17 +41,40 @@ impl Journal {
     pub fn update(&mut self) {
                 
         // pull remote origin
-        todo!();
+        //todo!();
 
         // Add daily log for today if not exist yet
-        todo!();
+        println!("Migrating regular log");
+        match self.regular_migration(){
+            Ok(x) => {
+                println!("done");
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
+        }
 
         // Update link for access dailylog if needed
-        todo!();
+        //todo!();
 
         // push remote origin
-        todo!();
+        //todo!();
 
+    }
+    pub fn regular_migration(&mut self) -> Result<()> {
+        let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
+        for (name, template) in &Config::global().templates {
+            print!("Migrating {} ...", name);
+            match template.regular_migration(&pages[..]) {
+                Ok(x) => {
+                    println!("Done");
+                },
+                Err(x) => {
+                    println!("Skipped");
+                }
+            };
+        }
+        Ok(())
     }
 }
 

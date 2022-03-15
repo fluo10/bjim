@@ -1,11 +1,12 @@
-use anyhow::{Result};
+use anyhow::{Error, Result};
 use clap::Args;
 use git2::Repository;
 use lib::{Config};
 use std::env;
 use std::path::{PathBuf};
+use std::convert::TryInto;
 
-#[derive(Args)]
+#[derive(Args, Clone)]
 pub struct GlobalArgs {
     #[clap(short, long, from_global)]
     pub config_path: Option<PathBuf>,
@@ -16,12 +17,20 @@ pub struct GlobalArgs {
 }
 
 impl GlobalArgs {
-    pub fn init_config(&self) -> Result<()> {
+    pub fn to_config(&self) -> Result<Config> {
+        let config: Config = self.clone().try_into()?;
+        Ok(config)
+    }
+}
+
+impl TryInto<Config> for GlobalArgs  {
+    type Error = Error;
+    fn try_into(self) -> Result<Config> {
         fn get_current_git_dir() -> Result<PathBuf> {
             let git_dir: PathBuf = Repository::discover(env::current_dir()?)?.workdir().unwrap().to_path_buf();
             Ok(git_dir)
         }
-        let mut config = match (&self.config_path, &self.journal_dir) {
+        let mut config: Config = match (&self.config_path, &self.journal_dir) {
             (Some(c), Some(j)) => {
                 Config::from_path_and_journal_dir(&c, &j)?
             },
@@ -46,7 +55,6 @@ impl GlobalArgs {
         if let Some(x) = &self.journal_dir {
             config.data_dir = x.clone();
         }
-        config.globalize()?;
-        Ok(())
+        Ok(config)
     }
 }

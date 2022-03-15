@@ -42,17 +42,22 @@ pub struct Config {
     #[serde(default,)]
     pub data_dir: PathBuf,
 
+    #[serde(skip_deserializing, skip_serializing_if = "std::ops::Not::not")]
+    pub dry_run: bool,
+
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, TagConfig>,
 
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub templates: HashMap<String, RegularLogTemplate>,
+
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
             data_dir: PathBuf::from("."),
+            dry_run: false,
             tags: HashMap::new(),
             templates: HashMap::new(),
         }
@@ -176,6 +181,7 @@ mod tests {
                     }
                 )
             ]),
+            ..Default::default()
         };
         let toml = r#"
 data_dir = "."

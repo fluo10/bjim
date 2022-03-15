@@ -1,4 +1,5 @@
-use crate::args::WriteArgs;
+use crate::args::{GlobalArgs, ModeArgs};
+use lib::{Config, Journal};
 
 use clap::Parser;
 
@@ -7,7 +8,10 @@ use clap::Parser;
 pub struct UpdateCmd {
 
     #[clap(flatten)]
-    pub write_args: WriteArgs,
+    pub global_args: GlobalArgs,
+
+    #[clap(flatten)]
+    pub mode_args: ModeArgs,
 
     #[clap(long)]
     pub push: bool,
@@ -19,18 +23,17 @@ pub struct UpdateCmd {
 
 impl UpdateCmd {
     pub fn run(&self) {
-        
-        // pull remote origin
-        todo!();
-
-        // Add daily log for today if not exist yet
-        todo!();
-
-        // Update link for access dailylog if needed
-        todo!();
-
-        // push remote origin
-        todo!();
+        match self.global_args.to_config().unwrap().globalize(){
+            Ok(()) => {
+                Config::global().show();
+            },
+            Err(x) => {
+                eprintln!("{}",x);
+            }
+        }
+        let mut journal: Journal = Journal::new().unwrap();
+        journal.reload();
+        journal.update();
 
     }
 }
