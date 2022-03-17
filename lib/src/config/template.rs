@@ -3,7 +3,12 @@ mod format;
 pub use format::RegularPathFormat;
 
 use crate::{Config, Page};
+use std::fs::remove_file;
 use std::path::{Path, PathBuf};
+#[cfg(windows)]
+use std::os::windows::fs::symlink_file as symlink;
+#[cfg(unix)]
+use std::os::unix::fs::symlink;
 use anyhow::{anyhow, bail, Result};
 
 
@@ -51,10 +56,29 @@ impl RegularLogTemplate {
                     latest_page.write();
                     today_page.write();
                 }
+                if let Some(x) = &self.link_path {
+                    let link_path = Config::global().data_dir.join(x);
+                    print!("Update link {:?}...", &link_path);
+                    match (link_path.is_symlink(), link_path.exists()) {
+                        (true, _) => {
+                            remove_file(&link_path);
+                            symlink(&today_page.path, &link_path);
+                            println!("Updated");
+                        },
+                        (false, true) => {
+                            eprintln!("Skip: file or dir exists");
+                        }
+                        (false, false) => {
+                            symlink(&today_page.path, &link_path);
+                            println!("Created");
+                        }
+                    }
+                }
                 return Ok(());
             } else {
                 bail!("Today file is exists");
             };
+
         }
         bail!("This template is not target of auto migration");
     }
