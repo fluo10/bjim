@@ -1,6 +1,10 @@
+mod buf;
+mod builder;
 mod template;
 mod tag;
 
+use buf::ConfigBuf;
+use builder::ConfigBuilder;
 pub use tag::TagConfig;
 use template::{RegularLogTemplate, RegularPathFormat};
 
@@ -143,6 +147,19 @@ impl TryFrom<&str> for Config {
             config.data_dir = home_dir().unwrap().join(leaf.unwrap());
         }
         Ok(config)
+    }
+}
+
+impl TryFrom<ConfigBuf> for Config {
+    type Error = Error;
+    fn try_from(b: ConfigBuf) -> Result<Self> {
+        todo!();
+    }
+}
+impl TryFrom<ConfigBuilder> for Config {
+    type Error = Error;
+    fn try_from(b: ConfigBuilder) -> Result<Self> {
+        b.build()
     }
 }
 
