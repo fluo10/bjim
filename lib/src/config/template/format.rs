@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::convert::TryFrom;
 
 use anyhow::{bail, Result};
-use chrono::{NaiveDate, Utc};
+use chrono::{NaiveDate, Local};
 use regex::{escape, Regex};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
@@ -101,7 +101,7 @@ impl RegularPathFormat {
         PathBuf::from(date.format(self.format.as_str()).to_string())
     }
     pub fn get_today_path(&self) -> PathBuf {
-        self.get_path(Utc::today().naive_local())
+        self.get_path(Local::today().naive_local())
     }
 }
 impl Into<String> for RegularPathFormat {
