@@ -1,5 +1,6 @@
 use regex::Regex;
 use super::bullet::TaskStatus;
+use crate::Config;
 
 pub struct PageContent {
     pub raw: String,
@@ -23,8 +24,17 @@ impl PageContent {
 
     /// Delete other lines, leaving only the active task, heading and blank lines
     pub fn filter_open_tasks(&mut self) {
-        let pattern = r##"(?m)(?:^[ \t]*?- \[[ /]\] .*?$)|(?:^[ ]*$)|(?:^#+ .*$)|(?:^[ \t]*?- \[x\] .*🔁.*$)"##;
-        let re = Regex::new(pattern).unwrap();
+        let mut patterns: Vec<String> = Vec::new();
+        patterns.push([
+                r##"(?m)(?:^[ \t]*?- \[[ /]\] .*?$)"##, // Open task
+                r##"(?:^[ ]*$)"##, // Blank line
+                r##"(?:^#+ .*$)"##, // Header
+        ].join("|"));
+        for (tag, config) in Config::global().tags.iter().filter(|(t, c)| c.repeat) {
+            let pattern = r##"(?:^[ \t]*?- \[x\] .*#"##.to_string() + &regex::escape(tag) +  r##".*$)"##;
+            patterns.push(pattern);
+        }
+        let re = Regex::new(&patterns.join("|")).unwrap();
         let mut result:Vec<String> = Vec::new();
         for caps in re.captures_iter(self.raw.as_str()) {
             result.push(caps[0].to_string());
@@ -51,9 +61,18 @@ impl From<&str> for PageContent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::convert::TryFrom;
+    
+    fn init_config() {
+        Config::try_from(r"
+[tags]
+[tags.Daily]
+repeat = true").unwrap().globalize();
+    }
     #[test]
     fn replace_task_status() {
-
+        init_config();
+        //Config::default().globalize();
         fn test_by_status(before: TaskStatus, after:TaskStatus) {
             const origin:&str = r"
 - [ ] Open task
@@ -108,6 +127,7 @@ mod tests {
 
     #[test]
     fn filter_open_tasks() {
+        init_config();
         let mut content = PageContent::from_str(r##"## Section1
 
 - [ ] Open task
@@ -115,13 +135,13 @@ mod tests {
 - [<] Scheduled task
 - [/] Task in progress
 - [x] Closed task
-- [x] Closed task with 🔁"##);
+- [x] Closed task with #Daily"##);
         content.filter_open_tasks();
         assert_eq!(content.raw, r##"## Section1
 
 - [ ] Open task
 - [/] Task in progress
-- [x] Closed task with 🔁"##);
+- [x] Closed task with #Daily"##);
     }
 
 }
