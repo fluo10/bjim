@@ -131,6 +131,23 @@ impl Config {
         let result = toml::to_string(self)?;
         Ok(result)
     }
+
+    /// Initialize global config variable for unit testing
+    #[cfg(test)]
+    pub fn init_test() {
+        Config{
+            tags: HashMap::from([
+                (
+                    String::from("Daily"), 
+                    TagConfig{
+                        repeat: true,
+                        ..Default::default()
+                    }
+                ),
+            ]),
+            ..Default::default()
+        }.globalize();
+    }
 }
 
 impl TryFrom<&str> for Config {
@@ -146,10 +163,11 @@ impl TryFrom<&str> for Config {
     }
 }
 
+
 #[cfg(test)]
 mod tests {
 
-    use super::*; 
+    use super::*;
 
     fn assert_parse(s: &str, c: Config) {
         assert_eq!(
@@ -160,7 +178,7 @@ mod tests {
     
     #[test]
     fn parse_string_all() {
-        let mut config: Config = Config{
+        let config: Config = Config{
             data_dir: PathBuf::from("."),
             tags: HashMap::from([
                 (
