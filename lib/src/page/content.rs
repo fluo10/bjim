@@ -62,16 +62,12 @@ impl From<&str> for PageContent {
 mod tests {
     use super::*;
     use std::convert::TryFrom;
+    use crate::Config;
     
-    fn init_config() {
-        Config::try_from(r"
-[tags]
-[tags.Daily]
-repeat = true").unwrap().globalize();
-    }
+
     #[test]
     fn replace_task_status() {
-        init_config();
+        Config::init_test();
         //Config::default().globalize();
         fn test_by_status(before: TaskStatus, after:TaskStatus) {
             const origin:&str = r"
@@ -127,7 +123,7 @@ repeat = true").unwrap().globalize();
 
     #[test]
     fn filter_open_tasks() {
-        init_config();
+        Config::init_test();
         let mut content = PageContent::from_str(r##"## Section1
 
 - [ ] Open task
