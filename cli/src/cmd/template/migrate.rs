@@ -1,6 +1,6 @@
 use crate::args::GlobalArgs;
 
-use lib::Page;
+use lib::{Page, Journal};
 
 use anyhow::{Result};
 use clap::Parser;
@@ -20,6 +20,23 @@ pub struct TemplateMigrateCmd {
 
 impl TemplateMigrateCmd {
     pub fn run(&self) -> Result<()> {
-        todo!();
+        
+        match self.global.to_config().unwrap().globalize(){
+            Ok(()) => {},
+            Err(x) => {
+                eprintln!("{}",x);
+            }
+        }
+
+        let mut journal: Journal = Journal::new().unwrap();
+        journal.reload();
+        if self.templates.is_empty() {
+            journal.migrate_template_all()?;
+        } else {
+            for name in &self.templates {
+                journal.migrate_template(&name)?;
+            }
+        }
+        Ok(())
     }
 }
