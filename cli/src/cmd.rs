@@ -1,34 +1,69 @@
 mod check;
-mod list;
 mod config;
+mod list;
 mod migrate;
+mod template;
 mod update;
 
-pub use check::CheckCmd;
-pub use lib::{Config, Journal};
-pub use list::ListCmd;
-pub use config::ConfigCmd;
-pub use migrate::MigrateCmd;
-pub use update::UpdateCmd;
+use check::CheckCmd;
+use config::ConfigCmd;
+use lib::{Config, Journal};
+use list::ListCmd;
+use migrate::MigrateCmd;
+use template::TemplateCmd;
+use update::UpdateCmd;
 
+use std::path::PathBuf;
 
-pub use clap::Args;
+use clap::{Args, Parser, Subcommand};
 
-
-pub trait Sub {
-    /*fn get_journal(&self) -> Result<Config> {
-
-    }
-    */
-    fn run(&self);
-    fn get_config(&self){
-        
-    }
-    fn get_journal(&self);
-
+/// Simple program to greet a person
+#[derive(Parser)]
+#[clap(about, version, author)]
+pub struct Cmd {
+    #[clap(short, long, global=true)]
+    config_path: Option<PathBuf>,
+    #[clap(short, long, global=true)]
+    journal_dir: Option<String>,
+    #[clap(short, long, global=true)]
+    verbose: bool,
+    
+    #[clap(subcommand)]
+    pub command: Commands,
+    
 }
 
-pub trait Command {
+#[derive(Subcommand)]
+pub enum Commands {
+    Check(CheckCmd),
+    Config(ConfigCmd),
+    Migrate(MigrateCmd),
+    List(ListCmd),
+    Template(TemplateCmd),
+    Update(UpdateCmd),
+}
 
-
+impl Cmd {
+    pub fn run(&self){
+        match &self.command {
+            Commands::Check(x) => {
+                x.run();
+            }
+            Commands::Config(x) => {
+                x.run();
+            }
+            Commands::List(x) => {
+                x.run();
+            }
+            Commands::Migrate(x) => {
+                x.run();
+            }
+            Commands::Template(x) => {
+                x.run();
+            }
+            Commands::Update(x) => {
+                x.run();
+            }
+        }
+    }
 }

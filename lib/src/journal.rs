@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 //use super::page::Page;
 
 
-use anyhow::Result;
+use anyhow::{anyhow,Result};
 
 pub struct Journal{
     pub pages: Vec<Page>,
@@ -45,7 +45,7 @@ impl Journal {
 
         // Add daily log for today if not exist yet
         println!("Migrating regular log");
-        match self.regular_migration(){
+        match self.migrate_template_all(){
             Ok(x) => {
                 println!("done");
             }
@@ -61,19 +61,28 @@ impl Journal {
         //todo!();
 
     }
-    pub fn regular_migration(&mut self) -> Result<()> {
-        let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
+
+    /// Migrate all templates in config automatically
+    pub fn migrate_template_all(&mut self) -> Result<()> {
         for (name, template) in &Config::global().templates {
-            print!("Migrating {} ...", name);
-            match template.regular_migration(&pages[..]) {
-                Ok(x) => {
-                    println!("Done");
-                },
-                Err(x) => {
-                    println!("Skipped");
-                }
-            };
+            self.migrate_template(&name)?;
         }
+        Ok(())
+    }
+
+    /// Migrate template automatically based on config
+    pub fn migrate_template(&mut self, name: &str) -> Result<()> {
+        let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
+        print!("Migrating {} ...", name);
+        let template = &Config::global().templates.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
+        match template.regular_migration(&pages[..]) {
+            Ok(x) => {
+                println!("Done");
+            },
+            Err(x) => {
+                println!("Skipped");
+            }
+        };
         Ok(())
     }
 }

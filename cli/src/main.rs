@@ -1,10 +1,10 @@
-mod cli;
 mod cmd;
-use cli::Args;
 mod args;
+use cmd::Cmd;
+
 use clap::Parser;
 
 fn main() {
-    let args = Args::parse();
-    args.command.run();
+    let cmd = Cmd::parse();
+    cmd.run();
 }
