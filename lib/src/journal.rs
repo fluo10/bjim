@@ -2,6 +2,7 @@ use super::page::Page;
 use crate::Config;
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
+use log::{info, debug, trace, warn,};
 
 //use super::page::Page;
 
@@ -47,10 +48,10 @@ impl Journal {
         println!("Migrating regular log");
         match self.migrate_template_all(){
             Ok(x) => {
-                println!("done");
+                info!("done");
             }
             Err(e) => {
-                eprintln!("{}", e);
+                warn!("{}", e);
             }
         }
 
@@ -73,14 +74,14 @@ impl Journal {
     /// Migrate template automatically based on config
     pub fn migrate_template(&mut self, name: &str) -> Result<()> {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
-        print!("Migrating {} ...", name);
+        debug!("Migrating: {}", name);
         let template = &Config::global().templates.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
         match template.regular_migration(&pages[..]) {
             Ok(x) => {
-                println!("Done");
+                info!("Done migration: {}", name);
             },
             Err(x) => {
-                println!("Skipped");
+                info!("Skip Migration: {}", name);
             }
         };
         Ok(())

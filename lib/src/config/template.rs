@@ -9,10 +9,9 @@ use std::path::{Path, PathBuf};
 use std::os::windows::fs::symlink_file as symlink;
 #[cfg(unix)]
 use std::os::unix::fs::symlink;
+
 use anyhow::{anyhow, bail, Result};
-
-
-
+use log::{info, trace, warn,};
 use serde::{Deserialize, Serialize};
 
 
@@ -58,19 +57,19 @@ impl RegularLogTemplate {
                 }
                 if let Some(x) = &self.link_path {
                     let link_path = Config::global().data_dir.join(x);
-                    print!("Update link {:?}...", &link_path);
+                    trace!("Updating link {:?}", &link_path);
                     match (link_path.is_symlink(), link_path.exists()) {
                         (true, _) => {
                             remove_file(&link_path);
                             symlink(&today_page.path, &link_path);
-                            println!("Updated");
+                            info!("Complete updating link {:?}", &link_path);
                         },
                         (false, true) => {
-                            eprintln!("Skip: file or dir exists");
+                            warn!("Skip updating link: {:?}", &link_path);
                         }
                         (false, false) => {
                             symlink(&today_page.path, &link_path);
-                            println!("Created");
+                            info!("Create new link {:?}", &link_path);
                         }
                     }
                 }
