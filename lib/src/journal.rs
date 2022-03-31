@@ -1,8 +1,8 @@
 use super::page::Page;
 use crate::Config;
 use std::convert::AsRef;
-use std::path::{Path, PathBuf};
-use log::{info, debug, trace, warn,};
+use std::path::{Path};
+use log::{info, debug, warn,};
 
 //use super::page::Page;
 
@@ -47,7 +47,7 @@ impl Journal {
         // Add daily log for today if not exist yet
         println!("Migrating regular log");
         match self.migrate_template_all(){
-            Ok(x) => {
+            Ok(_x) => {
                 info!("done");
             }
             Err(e) => {
@@ -65,7 +65,7 @@ impl Journal {
 
     /// Migrate all templates in config automatically
     pub fn migrate_template_all(&mut self) -> Result<()> {
-        for (name, template) in &Config::global().templates {
+        for (name, _template) in &Config::global().templates {
             self.migrate_template(&name)?;
         }
         Ok(())
@@ -77,10 +77,10 @@ impl Journal {
         debug!("Migrating: {}", name);
         let template = &Config::global().templates.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
         match template.regular_migration(&pages[..]) {
-            Ok(x) => {
+            Ok(_x) => {
                 info!("Done migration: {}", name);
             },
-            Err(x) => {
+            Err(_x) => {
                 info!("Skip Migration: {}", name);
             }
         };

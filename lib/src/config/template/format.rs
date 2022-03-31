@@ -129,7 +129,7 @@ impl TryFrom<&str> for RegularPathFormat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use chrono::*;
+    
     #[test]
     fn regex() {
         assert!(RegularPathFormat::date_format_to_regex("%Y/%m/%d").unwrap().is_match("2022/02/02"));

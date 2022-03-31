@@ -1,12 +1,12 @@
 use crate::args::GlobalArgs;
 
-use lib::{Page, Journal};
+use lib::{Journal};
 
 use anyhow::{Result};
 use clap::Parser;
 
-use std::fs::{create_dir, read_dir};
-use std::path::PathBuf;
+
+
 
 /// Migrate files based on templates
 #[derive(Parser)]

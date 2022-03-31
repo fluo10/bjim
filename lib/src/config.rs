@@ -2,7 +2,7 @@ mod template;
 mod tag;
 
 pub use tag::TagConfig;
-use template::{RegularLogTemplate, RegularPathFormat};
+pub use template::{RegularLogTemplate, RegularPathFormat};
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;

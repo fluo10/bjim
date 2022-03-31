@@ -7,7 +7,7 @@ mod update;
 
 use check::CheckCmd;
 use config::ConfigCmd;
-use lib::{Config, Journal};
+
 use list::ListCmd;
 use migrate::MigrateCmd;
 use template::TemplateCmd;
@@ -15,7 +15,7 @@ use update::UpdateCmd;
 
 use std::path::PathBuf;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Parser, Subcommand};
 
 /// Simple program to greet a person
 #[derive(Parser)]

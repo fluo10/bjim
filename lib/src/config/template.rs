@@ -10,7 +10,7 @@ use std::os::windows::fs::symlink_file as symlink;
 #[cfg(unix)]
 use std::os::unix::fs::symlink;
 
-use anyhow::{anyhow, bail, Result};
+use anyhow::{bail, Result};
 use log::{info, trace, warn,};
 use serde::{Deserialize, Serialize};
 
@@ -97,7 +97,7 @@ impl Default for RegularLogTemplate {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
 
 }

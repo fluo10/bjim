@@ -30,7 +30,7 @@ impl PageContent {
                 r##"(?:^[ ]*$)"##, // Blank line
                 r##"(?:^#+ .*$)"##, // Header
         ].join("|"));
-        for (tag, config) in Config::global().tags.iter().filter(|(t, c)| c.repeat) {
+        for (tag, _config) in Config::global().tags.iter().filter(|(_t, c)| c.repeat) {
             let pattern = r##"(?:^[ \t]*?- \[x\] .*#"##.to_string() + &regex::escape(tag) +  r##".*$)"##;
             patterns.push(pattern);
         }
@@ -61,7 +61,7 @@ impl From<&str> for PageContent {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::convert::TryFrom;
+    
     use crate::Config;
     
 
