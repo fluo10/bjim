@@ -2,6 +2,7 @@ mod check;
 mod config;
 mod list;
 mod migrate;
+mod new;
 mod template;
 mod update;
 
@@ -10,6 +11,7 @@ use config::ConfigCmd;
 
 use list::ListCmd;
 use migrate::MigrateCmd;
+use new::NewCmd;
 use template::TemplateCmd;
 use update::UpdateCmd;
 
@@ -38,6 +40,7 @@ pub enum Commands {
     Check(CheckCmd),
     Config(ConfigCmd),
     Migrate(MigrateCmd),
+    New(NewCmd),
     List(ListCmd),
     Template(TemplateCmd),
     Update(UpdateCmd),
@@ -56,6 +59,9 @@ impl Cmd {
                 x.run();
             }
             Commands::Migrate(x) => {
+                x.run();
+            }
+            Commands::New(x) => {
                 x.run();
             }
             Commands::Template(x) => {
