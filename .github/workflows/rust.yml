@@ -25,12 +25,12 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - uses: action-rs/toolchain@v1
+    - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
         target: ${{ matrix.target }}
         override: true
-    - uses: action-rs/cargo@v1
+    - uses: actions-rs/cargo@v1
       with:
         use-cross: true
         command: check
