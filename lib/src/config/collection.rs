@@ -15,11 +15,13 @@ use log::{info, trace, warn,};
 use serde::{Deserialize, Serialize};
 
 
-/// Preset template for regularly log like daily log
-#[derive(Deserialize, Serialize, Debug, PartialEq)]
-pub struct RegularLogTemplate {
+/// Preset collection for regularly log like daily log
+/// This is named from the same term in Bullet Journal 
+#[derive(Deserialize, Serialize, Debug, Default, PartialEq)]
+pub struct CollectionConfig {
 
-
+    /// Path of template file used to create new file without migration
+    pub archetype_path: Option<PathBuf>,
 
     /// If true, this log is automatically created with update command
     /// Auto migration require `path_format` including `.md` extension 
@@ -28,11 +30,13 @@ pub struct RegularLogTemplate {
     /// If set, soft link to the latest file will be created or updated by each `update`
     pub link_path: Option<PathBuf>,
     
+    /// Path format used to generate file name from date
     pub path_format: Option<RegularPathFormat>,
+
 }
 
 
-impl RegularLogTemplate {
+impl CollectionConfig {
 
     pub fn is_valid(&self) -> bool {
         todo!();
@@ -84,15 +88,6 @@ impl RegularLogTemplate {
     
 }
 
-impl Default for RegularLogTemplate {
-    fn default() -> Self {
-        RegularLogTemplate{
-            path_format: None,
-            auto_migration: false,
-            link_path: None,
-        }
-    }
-}
 
 
 #[cfg(test)]
