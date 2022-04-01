@@ -1,6 +1,6 @@
 [package]
 name = "bjim-cli"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
 edition = "2018"
 
