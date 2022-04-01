@@ -46,7 +46,7 @@ impl Journal {
 
         // Add daily log for today if not exist yet
         println!("Migrating regular log");
-        match self.migrate_template_all(){
+        match self.migrate_collections(){
             Ok(_x) => {
                 info!("done");
             }
@@ -63,20 +63,20 @@ impl Journal {
 
     }
 
-    /// Migrate all templates in config automatically
-    pub fn migrate_template_all(&mut self) -> Result<()> {
-        for (name, _template) in &Config::global().templates {
-            self.migrate_template(&name)?;
+    /// Migrate all collections in config automatically
+    pub fn migrate_collections(&mut self) -> Result<()> {
+        for (name, _template) in &Config::global().collections {
+            self.migrate_collection(&name)?;
         }
         Ok(())
     }
 
     /// Migrate template automatically based on config
-    pub fn migrate_template(&mut self, name: &str) -> Result<()> {
+    pub fn migrate_collection(&mut self, name: &str) -> Result<()> {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
         debug!("Migrating: {}", name);
-        let template = &Config::global().templates.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
-        match template.regular_migration(&pages[..]) {
+        let collection = &Config::global().collections.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
+        match collection.regular_migration(&pages[..]) {
             Ok(_x) => {
                 info!("Done migration: {}", name);
             },

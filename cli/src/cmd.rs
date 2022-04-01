@@ -2,7 +2,7 @@ mod check;
 mod config;
 mod list;
 mod migrate;
-mod template;
+mod collection;
 mod update;
 
 use check::CheckCmd;
@@ -10,7 +10,7 @@ use config::ConfigCmd;
 
 use list::ListCmd;
 use migrate::MigrateCmd;
-use template::TemplateCmd;
+use collection::CollectionCmd;
 use update::UpdateCmd;
 
 use std::path::PathBuf;
@@ -39,7 +39,7 @@ pub enum Commands {
     Config(ConfigCmd),
     Migrate(MigrateCmd),
     List(ListCmd),
-    Template(TemplateCmd),
+    Collection(CollectionCmd),
     Update(UpdateCmd),
 }
 
@@ -58,7 +58,7 @@ impl Cmd {
             Commands::Migrate(x) => {
                 x.run();
             }
-            Commands::Template(x) => {
+            Commands::Collection(x) => {
                 x.run();
             }
             Commands::Update(x) => {

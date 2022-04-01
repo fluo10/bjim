@@ -1,8 +1,8 @@
-mod template;
+mod collection;
 mod tag;
 
 pub use tag::TagConfig;
-pub use template::{RegularLogTemplate, RegularPathFormat};
+pub use collection::{CollectionConfig, RegularPathFormat};
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
@@ -49,7 +49,7 @@ pub struct Config {
     pub tags: HashMap<String, TagConfig>,
 
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
-    pub templates: HashMap<String, RegularLogTemplate>,
+    pub collections: HashMap<String, CollectionConfig>,
 
 }
 
@@ -59,7 +59,7 @@ impl Default for Config {
             data_dir: PathBuf::from("."),
             dry_run: false,
             tags: HashMap::new(),
-            templates: HashMap::new(),
+            collections: HashMap::new(),
         }
     }
 }
@@ -189,10 +189,10 @@ mod tests {
                     }
                 ),
             ]),
-            templates: HashMap::from([
+            collections: HashMap::from([
                 (
                     "Dailylog".to_string(),
-                    RegularLogTemplate{
+                    CollectionConfig{
                         path_format: Some(RegularPathFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
                         auto_migration: true,
                         ..Default::default()
@@ -207,7 +207,7 @@ data_dir = "."
 repeat = true
 inherit = true
 migrate = true
-[templates.Dailylog]
+[collections.Dailylog]
 auto_migration = true
 path_format = "dailylog/%Y/%m/%d""#;
         assert_parse(

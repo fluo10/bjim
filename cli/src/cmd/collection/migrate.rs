@@ -8,17 +8,17 @@ use clap::Parser;
 
 
 
-/// Migrate files based on templates
+/// Migrate files based on collections
 #[derive(Parser)]
-pub struct TemplateMigrateCmd {
+pub struct CollectionMigrateCmd {
     #[clap(short='n', long)]
     dry_run: bool,
     #[clap(flatten)]
     global: GlobalArgs,
-    templates: Vec<String>,
+    collections: Vec<String>,
 }
 
-impl TemplateMigrateCmd {
+impl CollectionMigrateCmd {
     pub fn run(&self) -> Result<()> {
         
         match self.global.to_config().unwrap().globalize(){
@@ -30,11 +30,11 @@ impl TemplateMigrateCmd {
 
         let mut journal: Journal = Journal::new().unwrap();
         journal.reload();
-        if self.templates.is_empty() {
-            journal.migrate_template_all()?;
+        if self.collections.is_empty() {
+            journal.migrate_collections()?;
         } else {
-            for name in &self.templates {
-                journal.migrate_template(&name)?;
+            for name in &self.collections {
+                journal.migrate_collection(&name)?;
             }
         }
         Ok(())
