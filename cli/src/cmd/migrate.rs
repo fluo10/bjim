@@ -9,7 +9,7 @@ pub struct MigrateCmd {
     #[clap(short='n', long)]
     pub dry_run: bool,
     #[clap(flatten)]
-    global: GlobalArgs,
+    global_args: GlobalArgs,
     #[clap(min_values=2, value_names=&["SOURCE", "DESTINATION"])]
     pub paths: Vec<PathBuf>,
 }
@@ -17,6 +17,7 @@ pub struct MigrateCmd {
 impl MigrateCmd {
     pub fn run(&self) {
         println!("Execute migrate");
+        self.global_args.to_config().unwrap().globalize();
         let mut src_paths: Vec<PathBuf> = self.paths.clone();
         let dst_path: PathBuf = src_paths.pop().unwrap();
         if src_paths.len() > 2 {
