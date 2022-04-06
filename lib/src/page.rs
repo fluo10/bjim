@@ -94,7 +94,7 @@ impl Page {
 
     fn split_content(&mut self) {
         let re:Regex = Regex::new(
-            r"^(?:---\r?\n(?P<f>(?s).*?(?-s))---\r?\n)?(?P<c>(?s).*(?-s))$"
+            r"^(?:(?P<f>(?s)---\r?\n.*?(?-s))---\r?\n)?(?P<c>(?s).*(?-s))$"
         ).unwrap();
         let caps = re.captures(self.raw_content.as_str()).unwrap();
         self.front_matter = match caps.name("f") {
@@ -105,7 +105,7 @@ impl Page {
     }
     fn join_content(&mut self) {
         self.raw_content = match &self.front_matter {
-            Some(_x) => String::from("---\n") +  self.front_matter.as_ref().unwrap().raw.as_str() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
+            Some(x) => x.to_string().unwrap() + "---\n" + self.content.as_ref().unwrap().raw.as_str(),
             None => String::from(self.content.as_ref().unwrap().raw.as_str()),
         };
         
