@@ -1,4 +1,4 @@
-name: Check
+name: Test
 
 on:
   push
@@ -9,6 +9,7 @@ env:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -30,9 +31,18 @@ jobs:
         toolchain: stable
         target: ${{ matrix.target }}
         override: true
-    - uses: actions-rs/cargo@v1
+
+    - name: check
+      uses: actions-rs/cargo@v1
       with:
         use-cross: true
         command: check
+        args: --target ${{ matrix.target }}
+
+    - name: Test
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: true
+        command: test
         args: --target ${{ matrix.target }}
 
