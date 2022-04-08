@@ -25,6 +25,7 @@ pub struct CollectionConfig {
 
     /// If true, this log is automatically created with update command
     /// Auto migration require `path_format` including `.md` extension 
+    #[serde(default)]
     pub auto_migration: bool,
 
     /// If set, soft link to the latest file will be created or updated by each `update`
@@ -44,9 +45,8 @@ impl CollectionConfig {
     pub fn update_link(&self) -> Result<()> {
         todo!();
     }
-
-    pub fn regular_migration(&self, exists: &[&Path]) -> Result<()> {
-        if self.auto_migration && self.path_format.is_some() {
+    pub fn migrate(&self, exists: &[&Path]) -> Result<()> {
+        if self.path_format.is_some() {
             let format: &RegularPathFormat = &self.path_format.as_ref().unwrap();
             let today_path: PathBuf = Config::global().data_dir.join(format.get_today_path());
             let latest_path: PathBuf =  format.find_latest_path(exists).ok_or(anyhow::anyhow!("Latest page is not found"))?;

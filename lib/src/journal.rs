@@ -65,8 +65,10 @@ impl Journal {
 
     /// Migrate all collections in config automatically
     pub fn migrate_collections(&mut self) -> Result<()> {
-        for (name, _template) in &Config::global().collections {
-            self.migrate_collection(&name)?;
+        for (name, config) in &Config::global().collections {
+            if config.auto_migration {
+                self.migrate_collection(&name)?;
+            }
         }
         Ok(())
     }
@@ -76,7 +78,7 @@ impl Journal {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
         debug!("Migrating: {}", name);
         let collection = &Config::global().collections.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
-        match collection.regular_migration(&pages[..]) {
+        match collection.migrate(&pages[..]) {
             Ok(_x) => {
                 info!("Done migration: {}", name);
             },
