@@ -1,8 +1,10 @@
 mod collection;
+mod errors;
 mod tag;
 
 pub use tag::TagConfig;
 pub use collection::{CollectionConfig, RegularPathFormat};
+pub use errors::ConfigError;
 
 use std::path::{Path, PathBuf};
 use std::collections::HashMap;
@@ -14,7 +16,7 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::prelude::*;
 
-use anyhow::{bail,Error, Result};
+use anyhow::{bail,Error};
 use dirs::{config_dir, home_dir};
 
 use once_cell::sync::OnceCell;
@@ -22,6 +24,8 @@ use serde::{Deserialize, Serialize};
 
 
 static INSTANCE: OnceCell<Config> = OnceCell::new();
+
+type Result<T> = std::result::Result<T, ConfigError>;
 
 pub fn get_local_config_path(path: &dyn AsRef<Path>) -> PathBuf {
     let mut path: PathBuf = path.as_ref().to_path_buf();
@@ -37,6 +41,7 @@ pub fn get_user_config_path() -> Option<PathBuf> {
 }
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
 
     #[serde(default,)]
@@ -118,18 +123,14 @@ impl Config {
         INSTANCE.get().expect("Config is not initialized")
     }
     pub fn globalize(self) -> Result<()> {
-        match INSTANCE.set(self) {
-            Ok(()) => Ok(()),
-            Err(_x) => bail!("Failed to globalize config"),
-        }
+        INSTANCE.set(self).map_err(|_| Error::msg("Failed to globalize config").into())
     }
     pub fn show(&self){
         
         println!("{}", self.to_string().unwrap());
     }
     pub fn to_string(&self) -> Result<String> {
-        let result = toml::to_string(self)?;
-        Ok(result)
+        toml::to_string(self).map_err(|e| Error::new(e).into())
     }
 
     /// Initialize global config variable for unit testing
@@ -151,7 +152,7 @@ impl Config {
 }
 
 impl TryFrom<&str> for Config {
-    type Error = Error;
+    type Error = ConfigError;
     fn try_from(raw : &str) -> Result<Self> {
         let mut config:Self = toml::from_str(raw)?;
         if config.data_dir.starts_with("~/") {
