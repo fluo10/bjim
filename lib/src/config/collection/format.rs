@@ -1,4 +1,4 @@
-
+use crate::Config;
 use std::path::{Path, PathBuf};
 use std::convert::TryFrom;
 
@@ -65,6 +65,17 @@ pub struct RegularPathFormat {
 }
 
 impl RegularPathFormat {
+    fn clean_path(p: &AsRef<Path>) -> PathBuf {
+        let mut path = p.as_ref().to_path_buf();
+        let config = Config::global();
+        let file_name = path.file_name().unwrap();
+        if config.index_file_names.contains(file_name) {
+            path.pop();
+        } else {
+            path.set_extension("");
+        }
+        path
+    }
     fn date_format_to_pattern(f: &str) -> String {
         static FOUR_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
         static TWO_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
