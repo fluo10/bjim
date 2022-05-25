@@ -48,9 +48,14 @@ impl CollectionConfig {
     pub fn migrate(&self, exists: &[&Path]) -> Result<()> {
         if self.path_format.is_some() {
             let format: &RegularPathFormat = &self.path_format.as_ref().unwrap();
-            let today_path: PathBuf = Config::global().data_dir.join(format.get_today_path());
+            let config: &Config = Config::global();
+            let today_path: PathBuf = config.data_dir.join(format.get_today_path());
             let latest_path: PathBuf =  format.find_latest_path(exists).ok_or(anyhow::anyhow!("Latest page is not found"))?;
-            if latest_path < today_path {
+            let need_migration: bool = match config.use_unique_file_name {
+                true => ( latest_path.file_name() < today_path.file_name() ),
+                false => ( latest_path < today_path ) ,
+            };
+            if need_migration {
                 let mut latest_page = Page::new(latest_path);
                 let mut today_page = Page::new(today_path);
                 latest_page.read();

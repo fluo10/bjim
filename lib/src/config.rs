@@ -4,8 +4,9 @@ mod tag;
 pub use tag::TagConfig;
 pub use collection::{CollectionConfig, RegularPathFormat};
 
+use std::ffi::OsString;
 use std::path::{Path, PathBuf};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::{AsRef, TryFrom};
 
 
@@ -45,6 +46,15 @@ pub struct Config {
     #[serde(skip_deserializing, skip_serializing_if = "std::ops::Not::not")]
     pub dry_run: bool,
 
+    /// If true, some function like file matching is use only file name and ignore dir
+    /// If index file name is specified too, the index file's parent file is used in matching
+    #[serde(default)]
+    pub use_unique_file_name: bool,
+
+    /// Like index.html, Ignore this file name and use parent dir as file name in matching
+    #[serde(default)]
+    pub index_file_names: HashSet<OsString>,
+
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
     pub tags: HashMap<String, TagConfig>,
 
@@ -58,6 +68,8 @@ impl Default for Config {
         Self {
             data_dir: PathBuf::from("."),
             dry_run: false,
+            use_unique_file_name: false,
+            index_file_names: HashSet::new(),
             tags: HashMap::new(),
             collections: HashMap::new(),
         }
