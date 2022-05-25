@@ -48,9 +48,11 @@ pub struct Config {
 
     /// If true, some function like file matching is use only file name and ignore dir
     /// If index file name is specified too, the index file's parent file is used in matching
+    #[serde(default)]
     pub use_unique_file_name: bool,
 
     /// Like index.html, Ignore this file name and use parent dir as file name in matching
+    #[serde(default)]
     pub index_file_names: HashSet<OsString>,
 
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
