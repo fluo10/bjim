@@ -8,7 +8,7 @@ mod tag;
 
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
-use std::fs::{File, OpenOptions};
+use std::fs::{File, OpenOptions, create_dir_all};
 use std::io::prelude::*;
 use std::io::{Write, BufWriter};
 use regex::Regex;
@@ -58,6 +58,10 @@ impl Page {
         if self.path.is_file() {
             file= OpenOptions::new().write(true).open(self.path.clone()).unwrap();
         } else if !self.path.exists() {
+            let dir: &Path = self.path.parent().unwrap();
+            if !dir.exists() {
+                create_dir_all(dir);
+            }
             file = File::create(self.path.clone()).unwrap();
         } else {
             panic!();
