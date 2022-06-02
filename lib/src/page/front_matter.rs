@@ -14,7 +14,9 @@ pub struct FrontMatter {
     title: Option<String>,
     #[serde(with = "date_format")]
     date: Option<NaiveDateTime>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     categories: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     tags: Vec<String>,
     //spent_time: f32,
     #[serde(skip)]
@@ -81,9 +83,15 @@ mod date_format {
     where 
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        match NaiveDateTime::parse_from_str(&s, FORMAT){
-            Ok(x) => Ok(Some(x)),
+        let s: Option<String> = Deserialize::deserialize(deserializer)?;
+        if s.is_none() {
+            return Ok(None);
+        }
+
+        match NaiveDateTime::parse_from_str(&s.as_ref().unwrap(), FORMAT){
+            Ok(x) => {
+                println!("{:?}", Some(x));
+                Ok(Some(x))},
             Err(e) => Err(serde::de::Error::custom(e)),
         }
     }
@@ -96,11 +104,11 @@ mod tests {
     #[test]
     fn update_date() {
         const BEFORE: &str = r"---
-        date: 2022-01-02
+date: 2022-01-02
 title: test-title
 ";
         const AFTER: &str = r"---
-        date: 2022-02-03
+date: 2022-02-03
 title: test-title
 ";
         let mut fm = FrontMatter::from(BEFORE);
@@ -129,13 +137,16 @@ date: 2022-01-02
         */
         assert_eq!(
             FrontMatter::from(r"---
-date: 2022-03-07T09:15:00
+title: test
+date: 2022-03-07T09:15
 "),
             FrontMatter{
+                title: Some("test".to_string()),
                 date: Some(NaiveDate::from_ymd(2022, 03, 07).and_hms(9,15,0)),
                 raw: String::from(r"---
-                date: 2022-03-07T09:15:00
-                "),
+title: test
+date: 2022-03-07T09:15
+"),
                 ..Default::default()
             }
         );
