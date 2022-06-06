@@ -2,16 +2,27 @@ use std::convert::From;
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
-pub enum Token<'a> {
-    Heading(i8),
-    Space(&'a str),
-    Bullet(char),
-    CheckBox(char),
-    CodeBrock(&'a str),
-    Text(&'a str),
-    HashTag(&'a str),
+pub enum TokenKind {
+    HeaderPrefix,
+    Bullet,
+    CheckBox,
+    CodeBrockFence,
+    Text,
+    HashTag,
+    Indent,
+    BlankLine,
+    Space,
 }
 
+#[derive(Debug, PartialEq)]
+pub struct Token<'a> {
+    pub line: isize,
+    pub col: isize,
+    pub literal: &'a str,
+    pub kind : TokenKind,
+}
+
+/*
 impl<'a> From<&'a str> for Token<'a> {
     fn from(s:&'a str) -> Token<'a> {
         match s {
@@ -25,6 +36,7 @@ impl<'a> From<&'a str> for Token<'a> {
     }
 
 }
+*/
 impl<'a> fmt::Display for Token<'a>{
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         todo!();
@@ -34,6 +46,7 @@ impl<'a> fmt::Display for Token<'a>{
 #[cfg(test)]
 mod tests {
     use super::*;
+    /*
     #[test]
     fn token() {
         fn assert_token(s: &str, token: Token) {
@@ -46,4 +59,5 @@ mod tests {
         assert_token(" ", Token::Space(" "));
 
     }
+    */
 }
