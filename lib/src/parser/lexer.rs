@@ -4,21 +4,89 @@ use std::convert::From;
 use std::iter::Peekable;
 use std::str::Chars;
 
-use anyhow::Result;
+use anyhow::{anyhow,bail,Error,Result};
 
 pub struct Lexer<'a> {
     chars: Peekable<Chars<'a>>,
-    position: isize,
-    read_position: isize,
-    ch: Option<char>,
+    buf: String,
+    kind: Option<TokenKind>,
+    prev_kind: Option<TokenKind>,
     line: isize,
     column: isize,
+    read_column: isize,   
 }
 
 impl<'a> Lexer<'a> {
-    fn read_char(&'a mut self) -> Result<()> {
+
+    fn tokenize(&mut self) -> Option<Token>{
+        let kind = self.kind?;
+
+        let token = Token{ 
+            line: self.line,
+            column: self.column,
+            literal: self.buf.drain(..).collect(),
+            kind: kind,
+        };
+
+        if kind == TokenKind::LineBreak {
+            self.line += 1;
+            self.column = 1;
+        } else {
+            self.column = self.read_column;
+        };
+        self.prev_kind.insert(kind);
+
+        Some(token)
+    }
+
+    fn read_char(&mut self) {
+        self.buf.push(self.chars.next().unwrap());
+        self.read_column += 1;
+    }
+
+    fn peek_char(&mut self) -> Option<&char> {
+        self.chars.peek()
+    }
+
+    fn peek_char_eq(&mut self, c: &char) -> bool {
+        if let Some(x) = self.peek_char() {
+            x == c
+        } else {
+            false
+        }
+    }
+
+    fn try_read_header_prefix(&mut self) -> Option<TokenKind> {
         todo!();
     }
+
+    fn try_read_code_block_fence(&mut self) -> Option<TokenKind> {
+        todo!();
+    }
+
+    fn try_read_indent(&mut self) -> Option<TokenKind> {
+        todo!();
+    }
+
+    fn try_read_bullet(&mut self) -> Option<TokenKind> {
+        todo!();
+    }
+
+    fn try_read_hashtag(&mut self) -> Option<TokenKind> {
+        todo!();
+    }
+
+    fn try_read_space(&mut self) -> Option<TokenKind> {
+        while self.peek_char_eq(&' ') {
+            self.read_char();
+        };
+        Some(TokenKind::Space)
+    }
+    
+    fn read_text(&mut self){
+        todo!();
+    }
+
 
 }
 
@@ -26,21 +94,52 @@ impl<'a> From<&'a str> for Lexer<'a> {
     fn from(s: &'a str) -> Lexer<'a> {
         Lexer {
             chars: s.chars().peekable(),
-            position: 0,
-            read_position: 0,
-            ch: None,
-            line: 0,
-            column : 0,
+            buf: String::new(),
+            line: 1,
+            column: 1,
+            read_column: 1,
+            kind: None,
+            prev_kind: None,
         }
     }
 }
 
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Token<'a>;
+    type Item = Token;
 
-    fn next (&mut self) -> Option<Self::Item> {
-        let token: Token;
-        todo!();
+    fn next (&mut self) ->  Option<Token> {
+        let ch = self.chars.next()?;
+        let line = self.line;
+        let column=self.column;
+        let is_after_indent = match self.prev_kind {
+            Some(x) => x == TokenKind::Indent,
+            None => false
+        };
+        self.kind = match (column, is_after_indent, ch) {
+            (1, true, _) => panic!(),
+            (1, false, '#') => self.try_read_header_prefix(),
+            (1, false, ' ') => self.try_read_indent(),
+            (1, false, '`') => self.try_read_code_block_fence(),
+            (1, false, x) | (_, true, x) => {
+                match x {
+                    '-' | '*' | '+' => self.try_read_bullet(),
+                    _ => None
+                }
+            },
+            (_, _, '\n') => Some(TokenKind::LineBreak),
+            (_, _, '[') => Some(TokenKind::LBracket),
+            (_, _, ']') => Some(TokenKind::RBracket),
+            (_, _, ' ') => self.try_read_space(),
+            (_, _, '#') => self.try_read_hashtag(),
+            (_, _, _) => None,
+        };
+        if self.kind.is_none() {
+            self.read_text();
+            self.kind.insert(TokenKind::Text);
+        }
+
+        self.tokenize()
+
     }
 
 }
@@ -69,51 +168,68 @@ Paragraph.
     - Child note
 "#######;
         let v: Vec<Token> = vec![
-            Token{line: 1, col: 1, kind: TokenKind::HeaderPrefix, literal: "#"},
-            Token{line: 1, col: 2, kind: TokenKind::Space, literal: " "},
-            Token{line: 1, col: 3, kind: TokenKind::Text, literal: "Heading\n" },
-            Token{line: 2, col: 1, kind: TokenKind::BlankLine, literal: "\n" },
-            Token{line: 3, col: 1, kind: TokenKind::Text, literal: "Paragraph.\n"},
-            Token{line: 4, col: 1, kind: TokenKind::BlankLine, literal: "\n" },
-            Token{line: 5, col: 1, kind: TokenKind::HeaderPrefix, literal: "##"},
-            Token{line: 5, col: 3, kind: TokenKind::Space, literal: " "},
-            Token{line: 5, col: 4, kind: TokenKind::Text, literal: "List\n" },
-            Token{line: 6, col: 1, kind: TokenKind::BlankLine, literal: "\n" },
-            Token{line: 7, col: 1, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 7, col: 2, kind: TokenKind::Space, literal: " "},
-            Token{line: 7, col: 3, kind: TokenKind::Text, literal: "item1\n"},
-            Token{line: 8, col: 1, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 8, col: 2, kind: TokenKind::Space, literal: " "},
-            Token{line: 8, col: 3, kind: TokenKind::Text, literal: "item2\n"},
-            Token{line: 9, col: 1, kind: TokenKind::Indent, literal: "    "},
-            Token{line: 9, col: 5, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 9, col: 6, kind: TokenKind::Space, literal: " "},
-            Token{line: 9, col: 7, kind: TokenKind::Text, literal: "Child item\n"},
-            Token{line: 10, col: 1, kind: TokenKind::BlankLine, literal: "\n" },
-            Token{line: 11, col: 1, kind: TokenKind::HeaderPrefix, literal: "##"},
-            Token{line: 11, col: 3, kind: TokenKind::Space, literal: " "},
-            Token{line: 11, col: 4, kind: TokenKind::Text, literal: "Check list\n" },
-            Token{line: 12, col: 1, kind: TokenKind::BlankLine, literal: "\n" },
-            Token{line: 13, col: 1, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 13, col: 2, kind: TokenKind::Space, literal: " "},
-            Token{line: 13, col: 3, kind: TokenKind::CheckBox, literal: "[ ]"},
-            Token{line: 13, col: 6, kind: TokenKind::Space, literal: " "},
-            Token{line: 13, col: 7, kind: TokenKind::Text, literal: "Task1\n"},
-            Token{line: 14, col: 1, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 14, col: 2, kind: TokenKind::Space, literal: " "},
-            Token{line: 14, col: 3, kind: TokenKind::CheckBox, literal: "[ ]"},
-            Token{line: 14, col: 6, kind: TokenKind::Space, literal: " "},
-            Token{line: 14, col: 7, kind: TokenKind::Text, literal: "Task2\n"},
-            Token{line: 15, col: 1, kind: TokenKind::Indent, literal: "    "},
-            Token{line: 15, col: 5, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 15, col: 6, kind: TokenKind::Space, literal: " "},
-            Token{line: 15, col: 7, kind: TokenKind::CheckBox, literal: "[ ]"},
-            Token{line: 15, col: 10, kind: TokenKind::Space, literal: " "},
-            Token{line: 15, col: 11, kind: TokenKind::Text, literal: "Child task\n"},
-            Token{line: 16, col: 1, kind: TokenKind::Indent, literal: "    "},
-            Token{line: 16, col: 5, kind: TokenKind::Bullet, literal: "-"},
-            Token{line: 16, col: 6, kind: TokenKind::Space, literal: " "},
-            Token{line: 16, col: 7, kind: TokenKind::Text, literal: "Child note\n"},
+            Token{line: 1, column: 1, kind: TokenKind::HeaderPrefix, literal: "#".to_string()},
+            Token{line: 1, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 1, column: 3, kind: TokenKind::Text, literal: "Heading".to_string()},
+            Token{line: 1, column: 10, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 2, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 3, column: 1, kind: TokenKind::Text, literal: "Paragraph.".to_string()},
+            Token{line: 3, column: 11, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 4, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 5, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
+            Token{line: 5, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 5, column: 4, kind: TokenKind::Text, literal: "List".to_string()},
+            Token{line: 5, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 6, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 7, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 7, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 7, column: 3, kind: TokenKind::Text, literal: "item1".to_string()},
+            Token{line: 7, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 8, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 8, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 8, column: 3, kind: TokenKind::Text, literal: "item2".to_string()},
+            Token{line: 8, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 9, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
+            Token{line: 9, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 9, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 9, column: 7, kind: TokenKind::Text, literal: "Child item".to_string()},
+            Token{line: 9, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 10, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 11, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
+            Token{line: 11, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 11, column: 4, kind: TokenKind::Text, literal: "Check list".to_string()},
+            Token{line: 11, column: 14, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 12, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 13, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 13, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 13, column: 3, kind: TokenKind::LBracket, literal: "[".to_string()},
+            Token{line: 13, column: 4, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 13, column: 5, kind: TokenKind::RBracket, literal: "]".to_string()},
+            Token{line: 13, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 13, column: 7, kind: TokenKind::Text, literal: "Task1".to_string()},
+            Token{line: 13, column: 12, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 14, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 14, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 14, column: 3, kind: TokenKind::LBracket, literal: "[".to_string()},
+            Token{line: 14, column: 4, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 14, column: 5, kind: TokenKind::RBracket, literal: "]".to_string()},
+            Token{line: 14, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 14, column: 7, kind: TokenKind::Text, literal: "Task2".to_string()},
+            Token{line: 14, column: 12, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 15, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
+            Token{line: 15, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 15, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 15, column: 7, kind: TokenKind::LBracket, literal: "[".to_string()},
+            Token{line: 15, column: 8, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 15, column: 9, kind: TokenKind::RBracket, literal: "]".to_string()},
+            Token{line: 15, column: 10, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 15, column: 11, kind: TokenKind::Text, literal: "Child task".to_string()},
+            Token{line: 15, column: 21, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+            Token{line: 16, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
+            Token{line: 16, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
+            Token{line: 16, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 16, column: 7, kind: TokenKind::Text, literal: "Child note".to_string()},
+            Token{line: 16, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
         ];
         let t: Vec<Token> = Lexer::from(s).collect();
         assert_eq!(t, v);

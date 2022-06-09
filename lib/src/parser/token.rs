@@ -1,24 +1,33 @@
 use std::convert::From;
 use std::fmt;
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub enum TokenKind {
+
+    // Beginning of line
     HeaderPrefix,
-    Bullet,
-    CheckBox,
     CodeBrockFence,
+    Indent,
+    Bullet,
+    //Quotation,
+
     Text,
     HashTag,
-    Indent,
-    BlankLine,
+    //LParen,
+    //RParen,
+    LBracket,
+    RBracket,
     Space,
+
+    // End of line
+    LineBreak,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Token<'a> {
+pub struct Token {
     pub line: isize,
-    pub col: isize,
-    pub literal: &'a str,
+    pub column: isize,
+    pub literal: String,
     pub kind : TokenKind,
 }
 
@@ -37,8 +46,8 @@ impl<'a> From<&'a str> for Token<'a> {
 
 }
 */
-impl<'a> fmt::Display for Token<'a>{
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl fmt::Display for Token{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!();
     }
 }
