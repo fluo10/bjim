@@ -11,9 +11,9 @@ pub struct Lexer<'a> {
     buf: String,
     kind: Option<TokenKind>,
     prev_kind: Option<TokenKind>,
-    line: isize,
-    column: isize,
-    read_column: isize,   
+    line: usize,
+    column: usize,
+    read_column: usize,   
 }
 
 impl<'a> Lexer<'a> {
@@ -31,6 +31,7 @@ impl<'a> Lexer<'a> {
         if kind == TokenKind::LineBreak {
             self.line += 1;
             self.column = 1;
+            self.read_column = 1;
         } else {
             self.column = self.read_column;
         };

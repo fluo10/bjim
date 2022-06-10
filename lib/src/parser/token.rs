@@ -25,8 +25,8 @@ pub enum TokenKind {
 
 #[derive(Debug, PartialEq)]
 pub struct Token {
-    pub line: isize,
-    pub column: isize,
+    pub line: usize,
+    pub column: usize,
     pub literal: String,
     pub kind : TokenKind,
 }
