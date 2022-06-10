@@ -58,23 +58,57 @@ impl<'a> Lexer<'a> {
     }
 
     fn try_read_header_prefix(&mut self) -> Option<TokenKind> {
-        todo!();
+        while let Some(x) =  self.peek_char() {
+            match x {
+                &' ' => return Some(TokenKind::HeaderPrefix),
+                &'#' => self.read_char(),
+                _ => {
+                    if self.read_column == 1 {
+                        return self.try_read_hashtag();
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        None
     }
 
+    /*
     fn try_read_code_block_fence(&mut self) -> Option<TokenKind> {
         todo!();
     }
+    */
 
     fn try_read_indent(&mut self) -> Option<TokenKind> {
-        todo!();
+        while let Some(x) = self.peek_char() {
+            if x == &' ' {
+                self.read_char();
+            } else {
+                return Some(TokenKind::Indent);
+            }
+        }
+        None
     }
 
     fn try_read_bullet(&mut self) -> Option<TokenKind> {
-        todo!();
+        if let Some(x) = self.peek_char() {
+            if x == &' ' {
+                return Some(TokenKind::Bullet);
+            }
+        }
+        None
     }
 
     fn try_read_hashtag(&mut self) -> Option<TokenKind> {
-        todo!();
+        while let Some(x) = self.peek_char() {
+            if x == &' ' {
+                return Some(TokenKind::HashTag);
+            } {
+                self.read_char();
+            }
+        }
+        None
     }
 
     fn try_read_space(&mut self) -> Option<TokenKind> {
@@ -84,8 +118,14 @@ impl<'a> Lexer<'a> {
         Some(TokenKind::Space)
     }
     
-    fn read_text(&mut self){
-        todo!();
+    fn read_text(&mut self) {
+        while let Some(x) =  self.peek_char() {
+            match x {
+                &' ' | &'\n' => break,
+                _ => self.read_char()
+            }
+        }
+        self.kind.insert(TokenKind::Text);
     }
 
 
@@ -109,7 +149,8 @@ impl<'a> Iterator for Lexer<'a> {
     type Item = Token;
 
     fn next (&mut self) ->  Option<Token> {
-        let ch = self.chars.next()?;
+        let ch = *self.peek_char()?;
+        self.read_char();
         let line = self.line;
         let column=self.column;
         let is_after_indent = match self.prev_kind {
@@ -117,17 +158,18 @@ impl<'a> Iterator for Lexer<'a> {
             None => false
         };
         self.kind = match (column, is_after_indent, ch) {
-            (1, true, _) => panic!(),
+            //(1, true, _) => panic!(),
+            (_, _, '\n') => Some(TokenKind::LineBreak),
             (1, false, '#') => self.try_read_header_prefix(),
             (1, false, ' ') => self.try_read_indent(),
-            (1, false, '`') => self.try_read_code_block_fence(),
+            //(1, false, '`') => self.try_read_code_block_fence(),
             (1, false, x) | (_, true, x) => {
                 match x {
                     '-' | '*' | '+' => self.try_read_bullet(),
                     _ => None
                 }
             },
-            (_, _, '\n') => Some(TokenKind::LineBreak),
+
             (_, _, '[') => Some(TokenKind::LBracket),
             (_, _, ']') => Some(TokenKind::RBracket),
             (_, _, ' ') => self.try_read_space(),
@@ -136,7 +178,6 @@ impl<'a> Iterator for Lexer<'a> {
         };
         if self.kind.is_none() {
             self.read_text();
-            self.kind.insert(TokenKind::Text);
         }
 
         self.tokenize()
@@ -184,21 +225,25 @@ Paragraph.
             Token{line: 6, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 7, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
             Token{line: 7, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 7, column: 3, kind: TokenKind::Text, literal: "item1".to_string()},
+            Token{line: 7, column: 3, kind: TokenKind::Text, literal: "Note1".to_string()},
             Token{line: 7, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 8, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
             Token{line: 8, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 8, column: 3, kind: TokenKind::Text, literal: "item2".to_string()},
+            Token{line: 8, column: 3, kind: TokenKind::Text, literal: "Note2".to_string()},
             Token{line: 8, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 9, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
             Token{line: 9, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
             Token{line: 9, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 9, column: 7, kind: TokenKind::Text, literal: "Child item".to_string()},
+            Token{line: 9, column: 7, kind: TokenKind::Text, literal: "Child".to_string()},
+            Token{line: 9, column: 12, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 9, column: 13, kind: TokenKind::Text, literal: "note".to_string()},
             Token{line: 9, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 10, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 11, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
             Token{line: 11, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 11, column: 4, kind: TokenKind::Text, literal: "Check list".to_string()},
+            Token{line: 11, column: 4, kind: TokenKind::Text, literal: "Check".to_string()},
+            Token{line: 11, column: 9, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 11, column: 10, kind: TokenKind::Text, literal: "list".to_string()},
             Token{line: 11, column: 14, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 12, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 13, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
@@ -224,12 +269,16 @@ Paragraph.
             Token{line: 15, column: 8, kind: TokenKind::Space, literal: " ".to_string()},
             Token{line: 15, column: 9, kind: TokenKind::RBracket, literal: "]".to_string()},
             Token{line: 15, column: 10, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 15, column: 11, kind: TokenKind::Text, literal: "Child task".to_string()},
+            Token{line: 15, column: 11, kind: TokenKind::Text, literal: "Child".to_string()},
+            Token{line: 15, column: 16, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 15, column: 17, kind: TokenKind::Text, literal: "task".to_string()},
             Token{line: 15, column: 21, kind: TokenKind::LineBreak, literal: "\n".to_string()},
             Token{line: 16, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
             Token{line: 16, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
             Token{line: 16, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 16, column: 7, kind: TokenKind::Text, literal: "Child note".to_string()},
+            Token{line: 16, column: 7, kind: TokenKind::Text, literal: "Child".to_string()},
+            Token{line: 16, column: 12, kind: TokenKind::Space, literal: " ".to_string()},
+            Token{line: 16, column: 13, kind: TokenKind::Text, literal: "note".to_string()},
             Token{line: 16, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
         ];
         let t: Vec<Token> = Lexer::from(s).collect();
