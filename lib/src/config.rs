@@ -1,9 +1,11 @@
 mod collection;
 mod errors;
+mod format;
 mod tag;
 
 pub use tag::TagConfig;
-pub use collection::{CollectionConfig, RegularPathFormat};
+pub use collection::CollectionConfig;
+pub use format::PeriodFormat;
 pub use errors::ConfigError;
 
 use std::ffi::OsString;
@@ -206,7 +208,7 @@ mod tests {
                 (
                     "Dailylog".to_string(),
                     CollectionConfig{
-                        path_format: Some(RegularPathFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
+                        path_format: Some(PeriodFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
                         auto_migration: true,
                         ..Default::default()
                     }

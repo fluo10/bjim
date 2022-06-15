@@ -55,7 +55,7 @@ impl TryFrom<&str> for ValidInterval {
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(try_from = "&str", into = "String")]
-pub struct RegularPathFormat {
+pub struct PeriodFormat {
     
     /// Use to generate path from date
     format: String,
@@ -64,7 +64,7 @@ pub struct RegularPathFormat {
     interval: ValidInterval,
 }
 
-impl RegularPathFormat {
+impl PeriodFormat {
     fn clean_path(p: &AsRef<Path>) -> PathBuf {
         let mut path = p.as_ref().to_path_buf();
         let config = Config::global();
@@ -175,21 +175,21 @@ impl RegularPathFormat {
         Some((start_date, end_date))
     }
 }
-impl Into<String> for RegularPathFormat {
+impl Into<String> for PeriodFormat {
     fn into(self) -> String {
         self.format
     }
 }
 
-impl PartialEq for RegularPathFormat {
+impl PartialEq for PeriodFormat {
     fn eq(&self, other: &Self) -> bool {
         self.format == other.format
     }
 }
-impl TryFrom<&str> for RegularPathFormat {
+impl TryFrom<&str> for PeriodFormat {
     type Error = anyhow::Error;
     fn try_from(f: &str) -> Result<Self> {
-        let result = RegularPathFormat{
+        let result = PeriodFormat{
             format: f.to_string(),
             regex: Self::date_format_to_regex(f)?,
             interval: ValidInterval::try_from(f)?,
@@ -203,13 +203,13 @@ mod tests {
     
     #[test]
     fn regex() {
-        assert!(RegularPathFormat::date_format_to_regex("%Y/%m/%d").unwrap().is_match("2022/02/02"));
+        assert!(PeriodFormat::date_format_to_regex("%Y/%m/%d").unwrap().is_match("2022/02/02"));
     }
 
     #[test]
     fn convert_path() {
         fn test_format(format: &str, date: NaiveDate, path: PathBuf) {
-            let template = RegularPathFormat::try_from(format).unwrap();
+            let template = PeriodFormat::try_from(format).unwrap();
             assert_eq!(template.get_path(date), path);
         }
         test_format(
@@ -226,7 +226,7 @@ mod tests {
             &Path::new("2022/09/12"),
             &Path::new("2021/04/02"),
         ];
-        let format = RegularPathFormat::try_from("%Y/%m/%d").unwrap();
+        let format = PeriodFormat::try_from("%Y/%m/%d").unwrap();
         assert_eq!(format.find_latest_path(&paths).unwrap(), format.get_path(NaiveDate::from_ymd(2022, 09, 12)));
 
     }
@@ -243,7 +243,7 @@ mod tests {
         let date = NaiveDate::from_ymd(2022, 6, 15);
         for x in v{
             
-            let format = RegularPathFormat::try_from(x.0).unwrap();
+            let format = PeriodFormat::try_from(x.0).unwrap();
             let filename = x.1;
             let syear = x.2.0;
             let smonth = x.2.1;

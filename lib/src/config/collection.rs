@@ -1,6 +1,4 @@
-mod format;
-
-pub use format::RegularPathFormat;
+pub use crate::config::PeriodFormat;
 
 use crate::{Config, Page};
 use std::fs::remove_file;
@@ -32,10 +30,10 @@ pub struct CollectionConfig {
     pub link_path: Option<PathBuf>,
     
     /// Path format used to generate file name from date
-    pub path_format: Option<RegularPathFormat>,
+    pub path_format: Option<PeriodFormat>,
 
     /// Path format used to generate file name for archive 
-    pub archive_dir: Option<RegularPathFormat>,
+    pub archive_dir: Option<PeriodFormat>,
 
 }
 
@@ -50,7 +48,7 @@ impl CollectionConfig {
     }
     pub fn migrate(&self, exists: &[&Path]) -> Result<()> {
         if self.path_format.is_some() {
-            let format: &RegularPathFormat = &self.path_format.as_ref().unwrap();
+            let format: &PeriodFormat = &self.path_format.as_ref().unwrap();
             let config: &Config = Config::global();
             let today_path: PathBuf = config.data_dir.join(format.get_today_path());
             let latest_path: PathBuf =  format.find_latest_path(exists).ok_or(anyhow::anyhow!("Latest page is not found"))?;
