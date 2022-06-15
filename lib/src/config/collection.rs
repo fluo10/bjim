@@ -34,6 +34,9 @@ pub struct CollectionConfig {
     /// Path format used to generate file name from date
     pub path_format: Option<RegularPathFormat>,
 
+    /// Path format used to generate file name for archive 
+    pub archive_dir: Option<RegularPathFormat>,
+
 }
 
 
