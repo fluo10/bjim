@@ -1,12 +1,14 @@
 mod collection;
 mod errors;
 mod format;
+mod period;
 mod tag;
 
 pub use tag::TagConfig;
 pub use collection::CollectionConfig;
 pub use format::PeriodFormat;
 pub use errors::ConfigError;
+pub use period::Period;
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};

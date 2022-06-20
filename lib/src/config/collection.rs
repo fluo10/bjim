@@ -1,7 +1,7 @@
-pub use crate::config::PeriodFormat;
+pub use crate::config::{PeriodFormat, Period};
 
 use crate::{Config, Page};
-use std::fs::remove_file;
+use std::fs::{remove_file, rename};
 use std::path::{Path, PathBuf};
 #[cfg(windows)]
 use std::os::windows::fs::symlink_file as symlink;
@@ -9,6 +9,7 @@ use std::os::windows::fs::symlink_file as symlink;
 use std::os::unix::fs::symlink;
 
 use anyhow::{bail, Result};
+use chrono::{NaiveDate, Local};
 use log::{info, trace, warn,};
 use serde::{Deserialize, Serialize};
 
@@ -26,17 +27,13 @@ pub struct CollectionConfig {
     #[serde(default)]
     pub auto_migration: bool,
 
-    /// If set, soft link to the latest file will be created or updated by each `update`
-    pub link_path: Option<PathBuf>,
-    
     /// Path format used to generate file name from date
-    pub path_format: Option<PeriodFormat>,
+    pub path: Option<PeriodFormat>,
 
     /// Path format used to generate file name for archive 
-    pub archive_dir: Option<PeriodFormat>,
+    pub archive_path: Option<PeriodFormat>,
 
 }
-
 
 impl CollectionConfig {
 
@@ -46,25 +43,69 @@ impl CollectionConfig {
     pub fn update_link(&self) -> Result<()> {
         todo!();
     }
-    pub fn migrate(&self, exists: &[&Path]) -> Result<()> {
-        if self.path_format.is_some() {
-            let format: &PeriodFormat = &self.path_format.as_ref().unwrap();
-            let config: &Config = Config::global();
-            let today_path: PathBuf = config.data_dir.join(format.get_today_path());
-            let latest_path: PathBuf =  format.find_latest_path(exists).ok_or(anyhow::anyhow!("Latest page is not found"))?;
-            let need_migration: bool = match config.use_unique_file_name {
-                true => ( latest_path.file_name() < today_path.file_name() ),
-                false => ( latest_path < today_path ) ,
-            };
-            if need_migration {
-                let mut latest_page = Page::new(latest_path);
+    pub fn get_path(&self, date: NaiveDate) -> Option<PathBuf> {
+        if let Some(x) = self.get_working_path(date) {
+            Some(x)
+        } else {
+            self.get_archive_path(date)
+        }
+    }
+    pub fn get_working_path(&self, date: NaiveDate) -> Option<PathBuf> {
+        Some(self.path.as_ref()?.get_path(date))
+    }
+    pub fn get_archive_path(&self, date: NaiveDate) -> Option<PathBuf> {
+        Some(self.archive_path.as_ref()?.get_path(date))
+    }
+    pub fn get_latest_path_period(&self, exists: &[&Path]) -> Option<(PathBuf, Period)> {
+        if let Some(x) = self.get_latest_working_path_period(exists) {
+            Some(x)
+        } else {
+            self.get_latest_archive_path_period(exists)
+        }
+    }
+    pub fn get_latest_working_path_period(&self, exists: &[&Path]) -> Option<(PathBuf, Period)> {
+        let fmt = self.path.as_ref()?;
+        if let Some(x) = fmt.find_latest_path(exists) {
+            let period = fmt.get_period(&x.to_str()?)?;
+            Some((x, period))
+        } else {
+            None
+        }
+    }
+    pub fn get_latest_archive_path_period(&self, exists: &[&Path]) -> Option<(PathBuf, Period)> {
+        let fmt = self.archive_path.as_ref()?;
+        if let Some(x) = fmt.find_latest_path(exists) {
+            let period = fmt.get_period(&x.to_str()?)?;
+            Some((x, period))
+        } else {
+            None
+        }
+    }
+
+    pub fn migrate(&self, exists: &[&Path], dry_run: bool) -> Result<()> {
+        let date: NaiveDate = Local::today().naive_local();
+        if let Some((latest_path, period)) = self.get_latest_path_period(&exists) {
+            if period.contains(date) {
+                Err(anyhow::anyhow!("Migration is not needed"))
+            } else {
+                let mut latest_page = Page::new(&latest_path);
+                let today_path = self.get_path(date).unwrap();
                 let mut today_page = Page::new(today_path);
                 latest_page.read();
                 latest_page.migrate_to(&mut today_page);
-                if ! Config::global().dry_run {
+                if !dry_run {
                     latest_page.write();
                     today_page.write();
                 }
+
+                if let Some(archive) = &self.archive_path {
+                    let archive_path = archive.get_path(period.start);
+                    if archive_path != latest_path {
+                        rename(latest_path, archive_path)?;
+                    }
+                }
+
+                /*
                 if let Some(x) = &self.link_path {
                     let link_path = Config::global().data_dir.join(x);
                     trace!("Updating link {:?}", &link_path);
@@ -83,13 +124,15 @@ impl CollectionConfig {
                         }
                     }
                 }
-                return Ok(());
-            } else {
-                bail!("Today file is exists");
-            };
+                */
 
+                Ok(())
+            }
+
+        } else {
+            bail!("Latest page is not found");
         }
-        bail!("This template is not target of auto migration");
+        
     }
     
 }

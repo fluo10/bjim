@@ -1,4 +1,5 @@
 use crate::Config;
+use super::Period;
 use std::path::{Path, PathBuf};
 use std::convert::TryFrom;
 
@@ -7,6 +8,7 @@ use chrono::{NaiveDate, Local, Duration, Weekday};
 use regex::{escape, Captures, Regex,};
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
+
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -131,7 +133,7 @@ impl PeriodFormat {
     pub fn get_today_path(&self) -> PathBuf {
         self.get_path(Local::today().naive_local())
     }
-    pub fn get_interval(&self, s: &str) -> Option<(NaiveDate, NaiveDate)> {
+    pub fn get_period(&self, s: &str) -> Option<Period> {
         let caps = self.regex.captures(s).unwrap();
         fn try_parse_caps<T: std::str::FromStr>(caps: &Captures, name: &str) -> Option<T> {
             caps.name(&name)?.as_str().parse::<T>().ok()
@@ -172,7 +174,10 @@ impl PeriodFormat {
             }, 
             _ => return None,
         };
-        Some((start_date, end_date))
+        Some(Period{
+            start: start_date,
+            end: end_date
+        })
     }
 }
 impl Into<String> for PeriodFormat {
