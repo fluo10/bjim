@@ -1,10 +1,14 @@
 mod collection;
 mod errors;
+mod format;
+mod period;
 mod tag;
 
 pub use tag::TagConfig;
-pub use collection::{CollectionConfig, RegularPathFormat};
+pub use collection::CollectionConfig;
+pub use format::PeriodFormat;
 pub use errors::ConfigError;
+pub use period::Period;
 
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
@@ -57,7 +61,7 @@ pub struct Config {
     pub use_unique_file_name: bool,
 
     /// Like index.html, Ignore this file name and use parent dir as file name in matching
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "HashSet::is_empty")]
     pub index_file_names: HashSet<OsString>,
 
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]
@@ -206,7 +210,7 @@ mod tests {
                 (
                     "Dailylog".to_string(),
                     CollectionConfig{
-                        path_format: Some(RegularPathFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
+                        path: Some(PeriodFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
                         auto_migration: true,
                         ..Default::default()
                     }
@@ -222,7 +226,7 @@ inherit = true
 migrate = true
 [collections.Dailylog]
 auto_migration = true
-path_format = "dailylog/%Y/%m/%d""#;
+path = "dailylog/%Y/%m/%d""#;
         assert_parse(
             toml,
             config
