@@ -78,7 +78,7 @@ impl Journal {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
         debug!("Migrating: {}", name);
         let collection = &Config::global().collections.get(name).ok_or(anyhow!("Template {} is nothing in configure", name))?;
-        match collection.migrate(&pages[..], Config::global().dry_run) {
+        match collection.migrate(Config::global(), &pages[..]) {
             Ok(_x) => {
                 info!("Done migration: {}", name);
             },

@@ -61,7 +61,7 @@ pub struct Config {
     pub use_unique_file_name: bool,
 
     /// Like index.html, Ignore this file name and use parent dir as file name in matching
-    #[serde(default)]
+    #[serde(default, skip_serializing_if = "HashSet::is_empty")]
     pub index_file_names: HashSet<OsString>,
 
     #[serde(default, skip_serializing_if = "HashMap::is_empty")]

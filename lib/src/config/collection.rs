@@ -82,18 +82,18 @@ impl CollectionConfig {
         }
     }
 
-    pub fn migrate(&self, exists: &[&Path], dry_run: bool) -> Result<()> {
+    pub fn migrate(&self, config: &Config,  exists: &[&Path]) -> Result<()> {
         let date: NaiveDate = Local::today().naive_local();
         if let Some((latest_path, period)) = self.get_latest_path_period(&exists) {
             if period.contains(date) {
                 Err(anyhow::anyhow!("Migration is not needed"))
             } else {
                 let mut latest_page = Page::new(&latest_path);
-                let today_path = self.get_path(date).unwrap();
+                let today_path = config.data_dir.join(self.get_path(date).unwrap());
                 let mut today_page = Page::new(today_path);
                 latest_page.read();
                 latest_page.migrate_to(&mut today_page);
-                if !dry_run {
+                if !config.dry_run {
                     latest_page.write();
                     today_page.write();
                 }

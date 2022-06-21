@@ -85,23 +85,31 @@ impl PeriodFormat {
         static ISO_YEAR_REGEX: OnceCell<Regex> = OnceCell::new();
         static ISO_WEEK_REGEX: OnceCell<Regex> = OnceCell::new();
         static ISO_WEEKDAY_REGEX: OnceCell<Regex> = OnceCell::new();
+        static FOUR_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
+        static TWO_DIGIT_REGEX: OnceCell<Regex> = OnceCell::new();
 
         let mut f = escape(f);
         f = YEAR_REGEX.get_or_init(|| {
             Regex::new(r"%Y").unwrap()
-        }).replace_all(&f, r"(?P<year>\d{4})").to_string();
+        }).replace(&f, r"(?P<year>\d{4})").to_string();
         f = MONTH_REGEX.get_or_init(|| {
             Regex::new(r"%m").unwrap()
-        }).replace_all(&f, r"(?P<month>\d{2})").to_string();
+        }).replace(&f, r"(?P<month>\d{2})").to_string();
         f = DAY_REGEX.get_or_init(|| {
             Regex::new(r"%d").unwrap()
-        }).replace_all(&f, r"(?P<day>\d{2})").to_string();
+        }).replace(&f, r"(?P<day>\d{2})").to_string();
         f = ISO_YEAR_REGEX.get_or_init(|| {
             Regex::new(r"%G").unwrap()
-        }).replace_all(&f, r"(?P<isoyear>\d{4})").to_string();
+        }).replace(&f, r"(?P<isoyear>\d{4})").to_string();
         f = ISO_WEEK_REGEX.get_or_init(|| {
             Regex::new(r"%V").unwrap()
-        }).replace_all(&f, r"(?P<isoweek>\d{2})").to_string();
+        }).replace(&f, r"(?P<isoweek>\d{2})").to_string();
+        f = FOUR_DIGIT_REGEX.get_or_init(|| {
+            Regex::new(r"%[YG]").unwrap()
+        }).replace_all(&f, r"\d{4}").to_string();
+        f = TWO_DIGIT_REGEX.get_or_init(|| {
+            Regex::new(r"%[mdV]").unwrap()
+        }).replace_all(&f, r"\d{2}").to_string();
         //f = ISO_WEEKDAY_REGEX.get_or_init(|| {
         //    Regex::new(r"%u").unwrap()
         //}).replace_all(&f, r"(?P<u>\d{2})").to_string();
