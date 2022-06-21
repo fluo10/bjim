@@ -1,5 +1,6 @@
 use chrono::NaiveDate;
 
+#[derive(PartialEq, Debug)]
 pub struct Period {
     pub start: NaiveDate,
     pub end: NaiveDate,

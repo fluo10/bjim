@@ -257,7 +257,7 @@ mod tests {
             let emonth = x.3.1;
             let eday = x.3.2;
 
-            assert_eq!(format.get_interval(filename).unwrap(), (NaiveDate::from_ymd(syear,smonth,sday), NaiveDate::from_ymd(eyear,emonth,eday)));
+            assert_eq!(format.get_period(filename).unwrap(), Period{start: NaiveDate::from_ymd(syear,smonth,sday), end: NaiveDate::from_ymd(eyear,emonth,eday)});
 
         }
 

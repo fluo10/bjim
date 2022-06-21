@@ -210,7 +210,7 @@ mod tests {
                 (
                     "Dailylog".to_string(),
                     CollectionConfig{
-                        path_format: Some(PeriodFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
+                        path: Some(PeriodFormat::try_from("dailylog/%Y/%m/%d").unwrap()),
                         auto_migration: true,
                         ..Default::default()
                     }
@@ -226,7 +226,7 @@ inherit = true
 migrate = true
 [collections.Dailylog]
 auto_migration = true
-path_format = "dailylog/%Y/%m/%d""#;
+path = "dailylog/%Y/%m/%d""#;
         assert_parse(
             toml,
             config
