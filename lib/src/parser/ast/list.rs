@@ -1,5 +1,7 @@
+use crate::parser::Token;
 use super::ListItem;
 
+#[derive(Debug, PartialEq)]
 pub struct List {
-    items: Vec<ListItem>,
+    pub content: Vec<ListItem>,
 }

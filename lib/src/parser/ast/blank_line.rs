@@ -1,3 +1,7 @@
+use crate::parser::Token;
+
+#[derive(Debug, PartialEq)]
 pub struct BlankLine{
-    literal: String,
+    pub indent: Option<Token>,
+    pub line_break: Token,
 }

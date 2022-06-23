@@ -3,6 +3,6 @@ mod parser;
 mod lexer;
 mod token;
 
-use token::Token;
+use token::{Token, TokenKind};
 pub use lexer::Lexer;
 

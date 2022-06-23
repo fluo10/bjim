@@ -1,3 +1,5 @@
+use crate::parser::Token;
+#[derive(Debug, PartialEq)]
 pub struct Text {
-    literal: String,
+    pub content: Vec<Token>,
 }

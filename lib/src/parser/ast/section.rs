@@ -1,7 +1,9 @@
+use crate::parser::Token;
 use super::Block;
 use super::Header;
 
+#[derive(Debug, PartialEq)]
 pub struct Section{
-    header: Option<Header>,
-    content: Vec<Block>, 
+    pub header: Header,
+    pub content: Vec<Block>, 
 }

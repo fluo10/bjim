@@ -7,7 +7,9 @@ use super::{
     Section,
     List,
 };
+use crate::parser::Token;
 
+#[derive(Debug, PartialEq)]
 pub enum Block {
     Header(Header),
     Paragraph(Paragraph),

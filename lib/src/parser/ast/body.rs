@@ -1,5 +1,7 @@
 use super::Block;
+use crate::parser::Token;
 
+#[derive(Debug, PartialEq)]
 pub struct Body {
-    content: Vec<Block>,
+    pub content: Vec<Block>,
 }

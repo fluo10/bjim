@@ -1,5 +1,13 @@
 use super::Inline;
+use crate::parser::Token;
 
+#[derive(Debug, PartialEq)]
+pub struct HeaderPrefix {
+    pub prefix: Token,
+    pub space: Token,
+}
+#[derive(Debug, PartialEq)]
 pub struct Header {
-    contents: Vec<Inline>
+    pub prefix: HeaderPrefix,
+    pub content: Vec<Inline>
 }

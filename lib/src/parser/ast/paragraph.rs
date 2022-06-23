@@ -1,5 +1,7 @@
+use crate::parser::Token;
 use super::Inline;
 
+#[derive(Debug, PartialEq)]
 pub struct Paragraph {
-    content: Vec<Inline>,
+    pub content: Vec<Inline>,
 }
