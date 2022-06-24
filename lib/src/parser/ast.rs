@@ -15,7 +15,7 @@ pub use body::Body;
 pub use header::{Header, HeaderPrefix};
 pub use inline::Inline;
 pub use list::List;
-pub use list_item::{ListItem, ListItemPrefix};
+pub use list_item::{ListItem, ListItemPrefix, PeekedListItemPrefix};
 pub use paragraph::Paragraph;
 pub use section::Section;
 pub use text::Text;

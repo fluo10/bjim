@@ -5,61 +5,161 @@ use super::ast::*;
 
 use anyhow::Result;
 
-use std::iter::FromIterator;
+use std::iter::{FromIterator, Peekable};
+use std::collections::{VecDeque};
+use std::convert::{From, TryFrom};
 
-pub struct Parser {
-    tokens: Vec<Token>,
-    
-    cur_token: Option<Token>,
-    peek_token: Option<Token>
+#[derive(Debug, PartialEq)]
+pub struct Parser{
+    token_queue: VecDeque<Token>,
 }
+
+
 
 impl Parser {
-    pub fn try_parse_body(&mut self) -> Result<Body>{
+    pub fn get_token_kind(&self, index: usize) -> Option<&TokenKind> {
+        self.token_queue.get(index).map(|t| &t.kind)
+    }
+    pub fn get_token(&self, index: usize) -> Option<&Token> {
+        self.token_queue.get(index)
+    }
+    pub fn pop_token(&mut self) -> Option<Token> {
+        self.token_queue.pop_front()
+    }
+    pub fn parse(&mut self) -> Body {
+        let mut body= Body::new();
+        while let Some(block) = self.parse_block() {
+            body.content.push(block);
+        };
+        body
+    }
+    pub fn parse_blank_line(&mut self) -> Option<BlankLine>{
+        let indent = if self.get_token_kind(0) == Some(&TokenKind::Indent) {
+            self.pop_token()
+        } else {
+            None
+        };
+        assert_eq!(self.get_token_kind(0), Some(&TokenKind::LineBreak));
+        
+        Some(BlankLine{
+                    indent: indent,
+                    line_break: self.pop_token().unwrap(),
+        })
+    }
+    pub fn parse_block(&mut self)  -> Option<Block>{
+        let first_token = self.get_token(0)?;
+
+        let block: Block = match (first_token.kind, self.get_token_kind(1)) {
+            (TokenKind::LineBreak, _) | (TokenKind::Indent, Some(TokenKind::LineBreak)) => {
+                self.parse_blank_line().map_or_else(|| self.parse_paragraph().unwrap().into(), |x| x.into())
+            },
+            (TokenKind::Bullet, Some(TokenKind::Space)) => {
+                self.parse_list().map_or_else(|| self.parse_paragraph().unwrap().into(), |x| x.into())
+            },
+            (TokenKind::HeaderPrefix, Some(TokenKind::Space)) => {
+                self.parse_section().map_or_else(|| self.parse_paragraph().unwrap().into(), |x| x.into())
+            },
+            (_, _) => {
+                self.parse_paragraph().unwrap().into()
+            }
+        };
+        Some(block)
+
+    }
+    pub fn parse_header(&mut self) -> Option<Header> {
         todo!();
     }
-    pub fn try_parse_blank_line(&mut self) {
+    pub fn parse_list(&mut self) -> Option<List>{
+        assert_eq!((self.get_token_kind(0), self.get_token_kind(1)), (Some(&TokenKind::Bullet), Some(&TokenKind::Space)));
+
+        let mut list = List::new();
+        while let Some(list_item) = self.parse_list_item() {
+            list.content.push(list_item);
+        }
+
+        Some(list)
+        
+    }
+    pub fn parse_list_item(&mut self) -> Option<ListItem>{
+        
+        if PeekedListItemPrefix::try_from((self.get_token(0), self.get_token(1), self.get_token(2))).is_err() {
+            return None;
+        }
+        let mut list_item: ListItem = ListItemPrefix::from(&mut self.token_queue).into();
+        while let Some(inline) = self.parse_inline() {
+            list_item.content.push(inline);
+        }
+        while let Ok(prefix) = PeekedListItemPrefix::try_from((self.get_token(0), self.get_token(1), self.get_token(2))) {
+            if  prefix.indent.map_or(0, |x| x.literal.len()) > list_item.prefix.indent.as_ref().map_or(0, |x| x.literal.len()) {
+                if let Some(x) = self.parse_list_item() {
+                    list_item.children.push(x);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        Some(list_item)
+
+    }
+    pub fn parse_paragraph(&mut self) -> Option<Paragraph> {
         todo!();
     }
-    pub fn try_parse_header(&mut self) {
+    pub fn parse_section(&mut self) -> Option<Section> {
         todo!();
     }
-    pub fn try_parse_list(&mut self) {
+    /*pub fn parse_line(&mut self) -> Option<Line> {
+
+    }*/
+    pub fn parse_inline(&mut self) -> Option<Inline> {
         todo!();
     }
-    pub fn try_parse_paragraph(&mut self) {
+    pub fn parse_text(&mut self) -> Option<Text> {
+        let first_token = self.get_token(0)?;
+
         todo!();
     }
-    pub fn try_parse_section(&mut self) {
-        todo!();
-    }
-    pub fn try_parse_text(&mut self) {
+
+}
+impl Default for Parser
+{
+    fn default() -> Self {
         todo!();
     }
 }
-
 impl From<Vec<Token>> for Parser {
     fn from(v: Vec<Token>) -> Self {
         Parser{
-            tokens: v,
-            cur_token: None,
-            peek_token: None,
+            token_queue: v.into_iter().collect(),
         }
     }
 }
 
-impl From<Lexer<'_>> for Parser {
-    fn from(l: Lexer) -> Self {
-        Parser::from(l.collect::<Vec<Token>>())
+impl<'a> From<Lexer<'a>> for Parser {
+    fn from(l: Lexer<'a>) -> Self {
+        Parser{
+            token_queue: l.collect(),
+        }
     }
 }
 
-impl FromIterator<Token> for Parser {
-    fn from_iter<T: IntoIterator<Item = Token>>(iter: T) -> Parser {
-        let tokens: Vec<Token> = iter.into_iter().collect();
-        Parser::from(tokens)
+/*
+impl<I> FromIterator<Token> for Parser<I>
+where 
+    I: Iterator<Item = Token>
+{
+    fn from_iter<T>(iter: T) -> Self
+    where 
+        T: IntoIterator<Item = Token>,
+    {
+        Parser{
+            token_iter: iter.into_iter().peekable(),
+            cur_token: None,
+        }
     }
 }
+*/
 
 #[cfg(test)]
 mod tests {
