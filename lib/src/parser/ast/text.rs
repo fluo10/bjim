@@ -3,3 +3,11 @@ use crate::parser::Token;
 pub struct Text {
     pub content: Vec<Token>,
 }
+
+impl Text {
+    pub fn new() -> Text {
+        Text{
+            content: Vec::new()
+        }
+    }
+}

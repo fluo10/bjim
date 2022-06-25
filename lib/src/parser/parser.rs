@@ -113,12 +113,25 @@ impl Parser {
 
     }*/
     pub fn parse_inline(&mut self) -> Option<Inline> {
-        todo!();
+        match self.get_token(0).map(|x| &x.kind)? {
+            &TokenKind::LineBreak => {
+                Some(Inline::LineBreak(self.pop_token().unwrap()))
+            },
+            _ => {
+                self.parse_text().map(|x| x.into())
+            }
+        }
     }
     pub fn parse_text(&mut self) -> Option<Text> {
-        let first_token = self.get_token(0)?;
-
-        todo!();
+        let mut text = Text::new();
+        while let Some(x) = self.get_token_kind(0) {
+            if x == &TokenKind::LineBreak {
+                break;
+            } else {
+                text.content.push(self.pop_token().unwrap());
+            }
+        }
+        Some(text)
     }
 
 }
