@@ -67,7 +67,12 @@ impl Parser {
 
     }
     pub fn parse_header(&mut self) -> Option<Header> {
-        todo!();
+        let prefix= HeaderPrefix::from(&mut self.token_queue);
+        let inline= self.parse_line();
+        Some(Header{
+            prefix: prefix,
+            content: inline,
+        })
     }
     pub fn parse_list(&mut self) -> Option<List>{
         assert_eq!((self.get_token_kind(0), self.get_token_kind(1)), (Some(&TokenKind::Bullet), Some(&TokenKind::Space)));
@@ -80,6 +85,7 @@ impl Parser {
         Some(list)
         
     }
+
     pub fn parse_list_item(&mut self) -> Option<ListItem>{
         
         if PeekedListItemPrefix::try_from((self.get_token(0), self.get_token(1), self.get_token(2))).is_err() {
@@ -109,9 +115,20 @@ impl Parser {
     pub fn parse_section(&mut self) -> Option<Section> {
         todo!();
     }
-    /*pub fn parse_line(&mut self) -> Option<Line> {
+    pub fn parse_line(&mut self) -> Vec<Inline> {
+        let mut line: Vec<Inline> = Vec::new();
+        while let Some(x) = self.parse_inline() {
+            if let Inline::LineBreak(l) = x {
+                line.push(Inline::LineBreak(l));
+                break;
+            } else {
+                line.push(x);
+            }
+        }
+        line
+    }
 
-    }*/
+    
     pub fn parse_inline(&mut self) -> Option<Inline> {
         match self.get_token(0).map(|x| &x.kind)? {
             &TokenKind::LineBreak => {
@@ -190,7 +207,7 @@ Paragraph.
 - Note2
     - Child note
 "#######;
-        let body: Body= Parser::from(Lexer::from(s)).try_parse_body().unwrap();
+        let body: Body= Parser::from(Lexer::from(s)).parse();
         let expected = Body{
             content: vec![
                 Block::Section(Section{

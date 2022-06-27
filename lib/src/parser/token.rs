@@ -31,6 +31,28 @@ pub struct Token {
     pub kind : TokenKind,
 }
 
+impl From<(usize, usize, TokenKind, String)> for Token {
+    fn from( f: (usize, usize, TokenKind, String)) -> Self {
+        Token{
+            line: f.0 ,
+            column: f.1,
+            kind: f.2,
+            literal: f.3,
+        }
+    }
+}
+
+#[cfg(test)]
+impl From<(TokenKind, &str)> for Token {
+    fn from( f: (TokenKind, &str)) -> Self {
+        Token{
+            line: 0,
+            column: 0,
+            kind: f.0,
+            literal: f.1.to_string(),
+        }
+    }
+}
 /*
 impl<'a> From<&'a str> for Token<'a> {
     fn from(s:&'a str) -> Token<'a> {
@@ -46,6 +68,7 @@ impl<'a> From<&'a str> for Token<'a> {
 
 }
 */
+
 impl fmt::Display for Token{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         todo!();
