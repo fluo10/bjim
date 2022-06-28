@@ -1,21 +1,7 @@
-mod blank_line;
+mod inline;
 mod block;
 mod body;
-mod header;
-mod inline;
-mod list;
-mod list_item;
-mod paragraph;
-mod section;
-mod text;
 
-pub use blank_line::BlankLine;
-pub use block::Block;
+pub use block::*;
+pub use inline::*;
 pub use body::Body;
-pub use header::{Header, HeaderPrefix};
-pub use inline::Inline;
-pub use list::List;
-pub use list_item::{ListItem, ListItemPrefix, PeekedListItemPrefix};
-pub use paragraph::Paragraph;
-pub use section::Section;
-pub use text::Text;

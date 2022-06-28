@@ -1,7 +1,10 @@
+mod text;
+
+pub use text::Text;
+
 use crate::parser::{
     errors::ParseError,
     token::{Token, TokenKind},
-    ast::Text,
 };
 use std::collections::VecDeque;
 use std::convert::{From, TryFrom};
@@ -16,6 +19,22 @@ pub enum Inline {
     //Italic,
     //Link(),
     //HashTag(),
+}
+
+impl Inline {
+    pub fn is_line_break(&self) -> bool {
+        match self {
+            Inline::LineBreak(_) => true,
+            _ => false,
+        }
+    }
+    pub fn is_text(&self) -> bool {
+        match self {
+            Inline::Text(_) => true,
+            _ => false,
+        }
+    }
+    
 }
 
 impl From<Text> for Inline {
