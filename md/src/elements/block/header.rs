@@ -1,7 +1,7 @@
-use crate::parser::{
+use crate::{
     errors::ParseError, 
     token::{Token, TokenKind},
-    ast::Inline,
+    elements::Inline,
 };
 
 use std::collections::VecDeque;

@@ -13,7 +13,7 @@ pub use section::Section;
 pub use list::List;
 pub use list_item::{ListItem, ListItemPrefix, PeekedListItemPrefix};
 
-use crate::parser::{
+use crate::{
     errors::ParseError, 
     token::{Token, TokenKind},
 };

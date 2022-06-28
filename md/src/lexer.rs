@@ -1,4 +1,4 @@
-use super::token::{Token, TokenKind};
+use crate::token::{Token, TokenKind};
 
 use std::convert::From;
 use std::iter::Peekable;

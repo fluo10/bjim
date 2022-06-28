@@ -1,7 +1,8 @@
-use super::Token;
-use super::TokenKind;
-use super::Lexer;
-use super::ast::*;
+use crate::{
+    token::{Token, TokenKind},
+    lexer::Lexer,
+    elements::*,
+};
 
 use anyhow::Result;
 

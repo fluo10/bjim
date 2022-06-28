@@ -1,4 +1,4 @@
-use crate::parser::{
+use crate::{
     errors::ParseError, 
     token::{Token, TokenKind},
 };
@@ -14,13 +14,6 @@ pub struct BlankLine{
     pub line_break: Token,
 }
 
-/// #Examples
-/// 
-/// ```
-/// use blank_line::*;
-/// let token = Token::from(TokenKind::LineBreak, "\n");
-/// assert_eq!(BlankLine::try_from(token.clone()), BlankLine{indent: None, line_break: token.clone(),});
-/// ```
 impl TryFrom<Token> for BlankLine {
     type Error = ParseError;
     fn try_from(t: Token) -> Result<Self> {
@@ -34,12 +27,7 @@ impl TryFrom<Token> for BlankLine {
         }
     }
 }
-/// #Examples
-/// 
-/// ```
-/// let x = BlankLine::try_from((Token::from(TokenKind::Indent, "    "), Token::from(TokenKind::LineBreak, "\n"));
-/// assert_eq!(x, BlankLine{indent: Token::from(TokenKind::Indent, "    "), line_break: Token::from(TokenKind::LineBreak, "\n")})
-/// ```
+
 impl TryFrom<(Token, Token)> for BlankLine {
     type Error = ParseError;
     fn try_from(t: (Token, Token)) -> Result<Self> {
@@ -69,5 +57,31 @@ impl TryFrom<&mut VecDeque<Token>> for BlankLine {
                 Err(ParseError::InvalidToken)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn from_token() {
+        let token = Token::from((TokenKind::LineBreak, "\n"));
+        assert_eq!(
+            BlankLine::try_from(token.clone()).unwrap(), 
+            BlankLine{indent: None, line_break: token.clone(),}
+        );
+    }
+    
+    #[test]
+    fn from_2_tokens() {
+        let x = BlankLine::try_from((
+            Token::from((TokenKind::Indent, "    ")), 
+            Token::from((TokenKind::LineBreak, "\n"))
+        )).unwrap();
+        assert_eq!(x, BlankLine{
+            indent: Some(Token::from((TokenKind::Indent, "    "))), 
+            line_break: Token::from((TokenKind::LineBreak, "\n"))
+        });
     }
 }

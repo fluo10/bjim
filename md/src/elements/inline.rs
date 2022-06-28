@@ -2,7 +2,7 @@ mod text;
 
 pub use text::Text;
 
-use crate::parser::{
+use crate::{
     errors::ParseError,
     token::{Token, TokenKind},
 };
