@@ -1,0 +1,14 @@
+[package]
+name = "bjim-md"
+version = "0.0.1"
+authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
+edition = "2021"
+description = "Markdown parser for bjim"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.54"
+chrono = { version = "0.4.19", features = ["serde"] }
+thiserror = "1.0.30"
+
