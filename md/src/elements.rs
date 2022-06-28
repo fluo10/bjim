@@ -1,7 +1,7 @@
 mod inline;
 mod block;
-mod body;
+mod section;
 
 pub use block::*;
 pub use inline::*;
-pub use body::Body;
+pub use section::*;
