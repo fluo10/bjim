@@ -1,17 +1,16 @@
 [package]
-name = "bjim-md"
+name = "bjim-md-macros-derive"
 version = "0.0.1"
 authors = ["fluo10 <fluo10.dev@fireturtle.net>"]
 edition = "2021"
 description = "Markdown parser for bjim"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+proc-macro = true
 
 [dependencies]
-macros = { package = "bjim-md-macros", path = "macros" }
-macros_derive = { package = "bjim-md-macros-derive", path = "macros/macros_derive" }
 anyhow = "1.0.54"
-chrono = { version = "0.4.19", features = ["serde"] }
 quote = "1.0"
 syn = "1.0"
 thiserror = "1.0.30"

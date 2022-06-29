@@ -1,28 +1,19 @@
-mod brackets;
-mod bullet;
-mod fences;
-mod hashtag;
-mod heading_prefix;
-mod white_spaces;
-mod word;
-//mod single_char;
 mod position;
 
-pub use brackets::{LeftBracketToken, RightBracketToken};
-pub use bullet::BulletToken;
-pub use fences::CodeBlockFenceToken;
-pub use hashtag::HashtagToken;
-pub use heading_prefix::HeadingPrefixToken;
-pub use white_spaces::{IndentToken, SpaceToken, LineBreakToken};
-pub use word::WordToken;
 pub use position::TokenPosition;
+
+use macros::TokenMacro;
+use macros_derive::TokenMacro;
+
+
 
 use std::convert::From;
 use std::fmt;
 
 
+
 #[derive(Clone, Debug, PartialEq)]
-pub enum Token {
+pub enum RawToken {
 
     // Beginning of line
     HeadingPrefix(HeadingPrefixToken),
@@ -43,21 +34,23 @@ pub enum Token {
     LineBreak(LineBreakToken),
 }
 
-impl Token {
+impl RawToken {
+    
     pub fn len(&self) -> usize {
         match self {
-            Token::HeadingPrefix(x) => x.len(),
-            Token::CodeBlockFence(x) => x.len(),
-            Token::Indent(x) => x.len(),
-            Token::Bullet(x) => x.len(),
-            Token::Hashtag(x) => x.len(),
-            Token::LeftBracket(x) => x.len(),
-            Token::RightBracket(x) => x.len(),
-            Token::Space(x) => x.len(),
-            Token::Word(x) => x.len(),
-            Token::LineBreak(x) => x.len(),
+            RawToken::HeadingPrefix(x) => x.len(),
+            RawToken::CodeBlockFence(x) => x.len(),
+            RawToken::Indent(x) => x.len(),
+            RawToken::Bullet(x) => x.len(),
+            RawToken::Hashtag(x) => x.len(),
+            RawToken::LeftBracket(x) => x.len(),
+            RawToken::RightBracket(x) => x.len(),
+            RawToken::Space(x) => x.len(),
+            RawToken::Word(x) => x.len(),
+            RawToken::LineBreak(x) => x.len(),
         }
     }
+    
 
     pub fn is_heading_prefix(&self) -> bool {
         todo!()
@@ -95,33 +88,89 @@ impl Token {
 }
 
 
-impl fmt::Display for Token{
+impl fmt::Display for RawToken{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Token::HeadingPrefix(x) => write!(f, "{}", x),
-            Token::CodeBlockFence(x) => write!(f, "{}", x),
-            Token::Indent(x) => write!(f, "{}", x),
-            Token::Bullet(x) => write!(f, "{}", x),
-            Token::Hashtag(x) => write!(f, "{}", x),
-            Token::LeftBracket(x) => write!(f, "{}", x),
-            Token::RightBracket(x) => write!(f, "{}", x),
-            Token::Space(x) => write!(f, "{}", x),
-            Token::Word(x) => write!(f, "{}", x),
-            Token::LineBreak(x) => write!(f, "{}", x),
+            RawToken::HeadingPrefix(x) => write!(f, "{}", x),
+            RawToken::CodeBlockFence(x) => write!(f, "{}", x),
+            RawToken::Indent(x) => write!(f, "{}", x),
+            RawToken::Bullet(x) => write!(f, "{}", x),
+            RawToken::Hashtag(x) => write!(f, "{}", x),
+            RawToken::LeftBracket(x) => write!(f, "{}", x),
+            RawToken::RightBracket(x) => write!(f, "{}", x),
+            RawToken::Space(x) => write!(f, "{}", x),
+            RawToken::Word(x) => write!(f, "{}", x),
+            RawToken::LineBreak(x) => write!(f, "{}", x),
         }
     }
 }
 
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct BulletToken{
+    position: TokenPosition,
+    literal: String,   
+}
 
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct LeftBracketToken{
+    position: TokenPosition,
+    literal: String,   
+}
 
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct RightBracketToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct CodeBlockFenceToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct HashtagToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct HeadingPrefixToken{
+    position: TokenPosition,
+    literal: String,   
+}
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct IndentToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct SpaceToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct LineBreakToken{
+    position: TokenPosition,
+    literal: String,   
+}
+
+#[derive(Clone, Debug, PartialEq, TokenMacro)]
+pub struct WordToken{
+    position: TokenPosition,
+    literal: String,   
+}
 
 #[cfg(test)]
 mod tests {
     use super::*;
     /*
     #[test]
-    fn token() {
-        fn assert_token(s: &str, token: Token) {
+    fn Rawtoken() {
+        fn assert_token(s: &str, Rawtoken: Token) {
             
             assert_eq!(Token::from(s), token);
         }
