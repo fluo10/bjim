@@ -1,6 +1,6 @@
 use crate::{
     errors::ParseError,
-    token::{Token, TokenKind},
+    token::{Token, TokenKind, IndentToken, LeftBracketToken, WordToken, RightBracketToken, SpaceToken},
     elements::Inline,
 };
 
@@ -14,10 +14,21 @@ type Result<T> = std::result::Result<T, ParseError>;
 
 #[derive(Debug, PartialEq)]
 pub struct CheckBox {
-    pub open: Token,
-    pub status: Token,
-    pub close: Token,
-    pub space: Token,
+    pub open: LeftBracketToken,
+    pub status: SingleCharToken,
+    pub close: RightBracketToken,
+    pub space: SpaceToken,
+}
+
+impl From<(LeftBracketToken, SingleCharToken, RightBracketToken, SpaceToken)> for CheckBox {
+    fn from(t: LeftBracketToken, SingleCharToken, RightBracketToken, SpaceToken) -> Self {
+        CheckBox {
+            open: LeftBracketToken,
+            status: SingleCharToken,
+            close: RightBracketToken,
+            space: SpaceToken,
+        }
+    }
 }
 
 impl TryFrom<(Token, Token, Token, Token)> for CheckBox {

@@ -1,124 +1,119 @@
+mod brackets;
+mod bullet;
+mod fences;
+mod hashtag;
+mod heading_prefix;
+mod white_spaces;
+mod word;
+//mod single_char;
+mod position;
+
+pub use brackets::{LeftBracketToken, RightBracketToken};
+pub use bullet::BulletToken;
+pub use fences::CodeBlockFenceToken;
+pub use hashtag::HashtagToken;
+pub use heading_prefix::HeadingPrefixToken;
+pub use white_spaces::{IndentToken, SpaceToken, LineBreakToken};
+pub use word::WordToken;
+pub use position::TokenPosition;
+
 use std::convert::From;
 use std::fmt;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum TokenKind {
-
-    // Beginning of line
-    HeaderPrefix,
-    CodeBlockFence,
-    Indent,
-    Bullet,
-    //Quotation,
-
-    Text,
-    HashTag,
-    //LParen,
-    //RParen,
-    LBracket,
-    RBracket,
-    Space,
-
-    // End of line
-    LineBreak,
-}
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Token {
-    pub line: usize,
-    pub column: usize,
-    pub literal: String,
-    pub kind : TokenKind,
+pub enum Token {
+
+    // Beginning of line
+    HeadingPrefix(HeadingPrefixToken),
+    CodeBlockFence(CodeBlockFenceToken),
+    Indent(IndentToken),
+    Bullet(BulletToken),
+    //Quotation,
+
+    Hashtag(HashtagToken),
+    //LParen,
+    //RParen,
+    LeftBracket(LeftBracketToken),
+    RightBracket(RightBracketToken),
+    Space(SpaceToken),
+    Word(WordToken),
+
+    // End of line
+    LineBreak(LineBreakToken),
 }
+
 impl Token {
     pub fn len(&self) -> usize {
-        self.literal.len()
+        match self {
+            Token::HeadingPrefix(x) => x.len(),
+            Token::CodeBlockFence(x) => x.len(),
+            Token::Indent(x) => x.len(),
+            Token::Bullet(x) => x.len(),
+            Token::Hashtag(x) => x.len(),
+            Token::LeftBracket(x) => x.len(),
+            Token::RightBracket(x) => x.len(),
+            Token::Space(x) => x.len(),
+            Token::Word(x) => x.len(),
+            Token::LineBreak(x) => x.len(),
+        }
     }
-    pub fn is_header_prefix(&self) -> bool {
-        self.kind == TokenKind::HeaderPrefix
+
+    pub fn is_heading_prefix(&self) -> bool {
+        todo!()
+    }
+    pub fn heading_prefix(&self) -> Option<HeadingPrefixToken> {
+        todo!()
     }
     pub fn is_code_block_fence(&self) -> bool {
-        self.kind == TokenKind::CodeBlockFence
+        todo!()
     }
     pub fn is_indent(&self) -> bool {
-        self.kind == TokenKind::Indent
+        todo!()
     }
     pub fn is_bullet(&self) -> bool {
-        self.kind == TokenKind::Bullet
+        todo!()
     }
-    //pub fn is_quotation(&self) -> bool {
-    //    self.kind == TokenKind::Quotation
-    //}
-
     pub fn is_text(&self) -> bool {
-        self.kind == TokenKind::Text
+        todo!()
     }
     pub fn is_hashtag(&self) -> bool {
-        self.kind == TokenKind::HashTag
+        todo!()
     }
-    //pub fn is_lparen(&self) -> bool {
-    //    self.kind == TokenKind::LParen
-    //}
-    //pub fn is_rparen(&self) -> bool {
-    //    self.kind == TokenKind::RParen
-    //}
     pub fn is_left_bracket(&self) -> bool {
-        self.kind == TokenKind::LBracket
+        todo!()
     }
     pub fn is_right_bracket(&self) -> bool {
-        self.kind == TokenKind::RBracket
+        todo!()
     }
     pub fn is_space(&self) -> bool {
-        self.kind == TokenKind::Space
+        todo!()
     }
     pub fn is_line_break(&self) -> bool {
-        self.kind == TokenKind::LineBreak
+        todo!()
     }
 }
 
-impl From<(usize, usize, TokenKind, String)> for Token {
-    fn from( f: (usize, usize, TokenKind, String)) -> Self {
-        Token{
-            line: f.0 ,
-            column: f.1,
-            kind: f.2,
-            literal: f.3,
-        }
-    }
-}
-
-#[cfg(test)]
-impl From<(TokenKind, &str)> for Token {
-    fn from( f: (TokenKind, &str)) -> Self {
-        Token{
-            line: 0,
-            column: 0,
-            kind: f.0,
-            literal: f.1.to_string(),
-        }
-    }
-}
-/*
-impl<'a> From<&'a str> for Token<'a> {
-    fn from(s:&'a str) -> Token<'a> {
-        match s {
-            "#" => Token::Heading(1),
-            "-" => Token::Bullet('-'),
-            "*" => Token::Bullet('*'),
-            " " => Token::Space(" "),
-            _ => Token::Text(s),
-        }
-
-    }
-
-}
-*/
 
 impl fmt::Display for Token{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!();
+        match self {
+            Token::HeadingPrefix(x) => write!(f, "{}", x),
+            Token::CodeBlockFence(x) => write!(f, "{}", x),
+            Token::Indent(x) => write!(f, "{}", x),
+            Token::Bullet(x) => write!(f, "{}", x),
+            Token::Hashtag(x) => write!(f, "{}", x),
+            Token::LeftBracket(x) => write!(f, "{}", x),
+            Token::RightBracket(x) => write!(f, "{}", x),
+            Token::Space(x) => write!(f, "{}", x),
+            Token::Word(x) => write!(f, "{}", x),
+            Token::LineBreak(x) => write!(f, "{}", x),
+        }
     }
 }
+
+
+
 
 #[cfg(test)]
 mod tests {
