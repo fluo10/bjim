@@ -65,7 +65,7 @@ impl Token {
     pub fn is_left_bracket(&self) -> bool {
         self.kind == TokenKind::LBracket
     }
-    pub fn is_right_brachet(&self) -> bool {
+    pub fn is_right_bracket(&self) -> bool {
         self.kind == TokenKind::RBracket
     }
     pub fn is_space(&self) -> bool {
@@ -75,6 +75,7 @@ impl Token {
         self.kind == TokenKind::LineBreak
     }
 }
+
 impl From<(usize, usize, TokenKind, String)> for Token {
     fn from( f: (usize, usize, TokenKind, String)) -> Self {
         Token{
