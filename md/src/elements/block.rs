@@ -2,14 +2,12 @@ mod blank_line;
 mod header;
 mod paragraph;
 mod list;
-mod list_item;
 
 use std::fmt;
 pub use blank_line::BlankLine;
 pub use paragraph::Paragraph;
 pub use header::{Header, HeaderPrefix, PeekedHeaderPrefix};
-pub use list::List;
-pub use list_item::{ListItem, ListItemPrefix, PeekedListItemPrefix};
+pub use list::{List, ListItem, ListItemPrefix, PeekedListItemPrefix};
 
 use crate::{
     errors::ParseError, 
