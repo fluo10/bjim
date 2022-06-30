@@ -3,7 +3,8 @@ mod position;
 pub use position::TokenPosition;
 
 use macros::TokenLike;
-use macros_derive::TokenLike;
+use macros_derive::{TokenLike, EnumIs, EnumGet, EnumFrom,};
+
 
 
 
@@ -12,7 +13,7 @@ use std::fmt;
 
 
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+#[derive(Clone, Debug, PartialEq, TokenLike, EnumIs, EnumGet, EnumFrom,)]
 pub enum RawToken {
 
     // Beginning of line
@@ -53,39 +54,39 @@ impl RawToken {
     */
     
 
-    pub fn is_heading_prefix(&self) -> bool {
-        todo!()
-    }
-    pub fn heading_prefix(&self) -> Option<HeadingPrefixToken> {
-        todo!()
-    }
-    pub fn is_code_block_fence(&self) -> bool {
-        todo!()
-    }
-    pub fn is_indent(&self) -> bool {
-        todo!()
-    }
-    pub fn is_bullet(&self) -> bool {
-        todo!()
-    }
-    pub fn is_text(&self) -> bool {
-        todo!()
-    }
-    pub fn is_hashtag(&self) -> bool {
-        todo!()
-    }
-    pub fn is_left_bracket(&self) -> bool {
-        todo!()
-    }
-    pub fn is_right_bracket(&self) -> bool {
-        todo!()
-    }
-    pub fn is_space(&self) -> bool {
-        todo!()
-    }
-    pub fn is_line_break(&self) -> bool {
-        todo!()
-    }
+    //pub fn is_heading_prefix(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn heading_prefix(&self) -> Option<HeadingPrefixToken> {
+        //todo!()
+    //}
+    //pub fn is_code_block_fence(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_indent(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_bullet(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_text(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_hashtag(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_left_bracket(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_right_bracket(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_space(&self) -> bool {
+        //todo!()
+    //}
+    //pub fn is_line_break(&self) -> bool {
+        //todo!()
+    //}
 }
 
 
@@ -125,6 +126,7 @@ pub struct RightBracketToken{
     position: TokenPosition,
     literal: String,   
 }
+
 
 #[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct CodeBlockFenceToken{
@@ -170,6 +172,18 @@ pub struct WordToken{
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test] 
+    fn enum_derive() {
+        let token = LineBreakToken{
+            position: (0, 0).into(),
+            literal: "\n".into(),
+        };
+        let raw_token = RawToken::LineBreak(token.clone());
+
+        assert!(raw_token.is_line_break());
+        assert_eq!(raw_token.line_break(), Some(&token));
+        assert_eq!(RawToken::from(token), raw_token);
+    }
     /*
     #[test]
     fn Rawtoken() {
