@@ -2,8 +2,8 @@ mod position;
 
 pub use position::TokenPosition;
 
-use macros::TokenMacro;
-use macros_derive::TokenMacro;
+use macros::TokenLike;
+use macros_derive::TokenLike;
 
 
 
@@ -12,7 +12,7 @@ use std::fmt;
 
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub enum RawToken {
 
     // Beginning of line
@@ -36,7 +36,7 @@ pub enum RawToken {
 
 impl RawToken {
     
-    pub fn len(&self) -> usize {
+    /*pub fn len(&self) -> usize {
         match self {
             RawToken::HeadingPrefix(x) => x.len(),
             RawToken::CodeBlockFence(x) => x.len(),
@@ -50,6 +50,7 @@ impl RawToken {
             RawToken::LineBreak(x) => x.len(),
         }
     }
+    */
     
 
     pub fn is_heading_prefix(&self) -> bool {
@@ -88,6 +89,7 @@ impl RawToken {
 }
 
 
+/*
 impl fmt::Display for RawToken{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -104,61 +106,62 @@ impl fmt::Display for RawToken{
         }
     }
 }
+*/
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct BulletToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct LeftBracketToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct RightBracketToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct CodeBlockFenceToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct HashtagToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct HeadingPrefixToken{
     position: TokenPosition,
     literal: String,   
 }
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct IndentToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct SpaceToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct LineBreakToken{
     position: TokenPosition,
     literal: String,   
 }
 
-#[derive(Clone, Debug, PartialEq, TokenMacro)]
+#[derive(Clone, Debug, PartialEq, TokenLike)]
 pub struct WordToken{
     position: TokenPosition,
     literal: String,   
