@@ -68,3 +68,31 @@ pub fn impl_token_like(ast: &syn::DeriveInput) -> TokenStream {
     };
     gen.into()
 }
+pub fn impl_token_from(ast: &syn::DeriveInput) -> TokenStream {
+    let name = &ast.ident;
+    let gen = match &ast.data {
+        syn::Data::Struct(data_struct) => {
+            quote! {
+                impl From<impl Into<String>> for #name {
+                    fn from(s: impl Into<String>) -> Self {
+                        Self{
+                            literal: s.into(),
+                            ..Default::default()
+                        }
+                    }
+                }
+                impl From<(usize, usize, impl Into<String>)> for Self {
+                    fn from(s: (usize, usize, impl Into<String>)) for Self {
+                        let (line, col, literal) = s;
+                        Self{
+                            position: (line, col).into(), 
+                            literal: s.into(),
+                        }
+                    }
+                }
+            }
+        },
+        _ => panic!()
+    };
+    gen.into()
+}

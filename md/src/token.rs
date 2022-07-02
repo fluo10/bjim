@@ -1,16 +1,63 @@
 mod position;
 
 pub use position::TokenPosition;
+use crate::errors::ParseError;
 
 use macros::TokenLike;
 use macros_derive::{TokenLike, EnumIs, EnumGet, EnumFrom,};
 
-
-
-
 use std::convert::From;
 use std::fmt;
 
+type Result<T> = std::result::Result<T, ParseError>;
+
+pub enum BulletChar{
+    Hyphen,
+    Asterisk,
+    Plus,
+}
+
+const HYPHEN_CHAR: &char = &'-';
+const ASTERISK_CHAR: &char = &'*';
+const PLUS_CHAR: &char = &'+';
+
+impl BulletChar{
+
+    pub fn as_char(&self) -> &'static char{
+        use BulletChar::*;
+        match self {
+            Hyphen => HYPHEN_CHAR,
+            Asterisk => ASTERISK_CHAR,
+            Plus => PLUS_CHAR,
+        }
+    }
+
+    pub fn from_char(c: char) -> Option<Self> {
+        use BulletChar::*;
+        match &c {
+            HYPHEN_CHAR => Some(Hyphen),
+            ASTERISK_CHAR => Some(Asterisk),
+            PLUS_CHAR => Some(Plus),
+            _ => None
+        }
+    }
+}
+
+impl fmt::Display for BulletChar {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use BulletChar::*;
+        write!(f, "{}", self.as_char())
+    }
+}
+
+impl TryFrom<char> for BulletChar {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<BulletChar> {
+        Self::from_char(c).ok_or(ParseError::InvalidChar{expected: "-*+", found: c})
+    }
+}
+
+pub enum CodeBlockFenceChar{}
 
 
 #[derive(Clone, Debug, PartialEq, TokenLike, EnumIs, EnumGet, EnumFrom,)]

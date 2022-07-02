@@ -1,4 +1,4 @@
-use crate::token::{Token, TokenKind};
+use crate::token::{RawToken, TokenPosition};
 
 use std::convert::From;
 use std::iter::Peekable;
@@ -11,8 +11,7 @@ pub struct Lexer<'a> {
     buf: String,
     kind: Option<TokenKind>,
     prev_kind: Option<TokenKind>,
-    line: usize,
-    column: usize,
+    position: TokenPosition,
     read_column: usize,   
 }
 
