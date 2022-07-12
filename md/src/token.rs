@@ -3,13 +3,12 @@ mod position;
 pub use position::TokenPosition;
 use crate::errors::ParseError;
 
-use macros::TokenLike;
-use macros_derive::{TokenLike, EnumIs, EnumGet, EnumFrom,};
 
 use std::convert::From;
 use std::fmt;
 
 type Result<T> = std::result::Result<T, ParseError>;
+
 
 pub enum BulletChar{
     Hyphen,
@@ -59,8 +58,87 @@ impl TryFrom<char> for BulletChar {
 
 pub enum CodeBlockFenceChar{}
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct TokenContent {
+    position: Option<TokenPosition>,
+    literal: String, 
+}
 
-#[derive(Clone, Debug, PartialEq, TokenLike, EnumIs, EnumGet, EnumFrom,)]
+impl AsRef<TokenContent> for TokenContent {
+    fn as_ref(&self) -> &TokenContent {
+        self
+    }
+}
+
+impl AsMut<TokenContent> for TokenContent {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        self
+    }
+}
+
+impl From<&str> for TokenContent {
+    fn from(s: &str) -> Self {
+        TokenContent{
+            position: None,
+            literal: s.to_string(),
+        }
+    }
+}
+
+impl From<String> for TokenContent {
+    fn from(s: String) -> TokenContent {
+        TokenContent{
+            position: None,
+            literal: s,
+        }
+    }
+}
+
+impl From<(usize, usize, &str)> for TokenContent {
+    fn from(t: (usize, usize, &str)) -> TokenContent {
+        let (line, column, literal) = t;
+        TokenContent{
+            position: Some((line, column).into()),
+            literal: literal.to_string(),
+        }
+    }
+}
+
+impl From<(usize, usize, String)> for TokenContent {
+    fn from(t: (usize, usize, String)) -> TokenContent {
+        let (line, column, literal) = t;
+        TokenContent{
+            position: Some((line, column).into()),
+            literal: literal,
+        }
+    }
+}
+
+pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
+    fn get_literal(&self) -> &str {
+        todo!()
+    }
+    fn get_mut_literal(&mut self) -> &mut str {
+        todo!()
+    }
+    fn get_position(&self) -> Option<&TokenPosition> {
+        todo!()
+    }
+    fn get_mut_position(&mut self) -> Option<&mut TokenPosition> {
+        todo!()
+    }
+    fn len(&self) -> usize {
+        todo!()
+    }
+    fn has_position(&self) -> bool {
+        todo!()
+    }
+    fn take_position(&mut self) -> Option<TokenPosition> {
+        todo!()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum RawToken {
 
     // Beginning of line
@@ -156,64 +234,555 @@ impl fmt::Display for RawToken{
 }
 */
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl From<HeadingPrefixToken> for RawToken {
+    fn from(t: HeadingPrefixToken) -> Self {
+        Self::HeadingPrefix(t)
+    }
+}
+
+impl From<CodeBlockFenceToken> for RawToken {
+    fn from(t: CodeBlockFenceToken) -> Self {
+        Self::CodeBlockFence(t)
+    }
+}
+
+impl From<IndentToken> for RawToken {
+    fn from(t: IndentToken) -> Self {
+        Self::Indent(t)
+    }
+}
+
+impl From<BulletToken> for RawToken {
+    fn from(t: BulletToken) -> Self {
+        Self::Bullet(t)
+    }
+}
+
+impl From<HashtagToken> for RawToken {
+    fn from(t: HashtagToken) -> Self {
+        Self::Hashtag(t)
+    }
+}
+
+impl From<LeftBracketToken> for RawToken {
+    fn from(t: LeftBracketToken) -> Self {
+        Self::LeftBracket(t)
+    }
+}
+
+impl From<RightBracketToken> for RawToken {
+    fn from(t: RightBracketToken) -> Self {
+        Self::RightBracket(t)
+    }
+}
+
+impl From<SpaceToken> for RawToken {
+    fn from(t: SpaceToken) -> Self {
+        Self::Space(t)
+    }
+}
+
+impl From<WordToken> for RawToken {
+    fn from(t: WordToken) -> Self {
+        Self::Word(t)
+    }
+}
+
+impl From<LineBreakToken> for RawToken {
+    fn from(t: LineBreakToken) -> Self {
+        Self::LineBreak(t)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct BulletToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for BulletToken {}
+
+impl AsMut<TokenContent> for BulletToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl AsRef<TokenContent> for BulletToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl TryFrom<TokenContent> for BulletToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for BulletToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for BulletToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for BulletToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct LeftBracketToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for LeftBracketToken {}
+
+impl AsRef<TokenContent> for LeftBracketToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for LeftBracketToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct RightBracketToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
+}
+
+impl TokenLike for RightBracketToken {}
+
+impl AsRef<TokenContent> for RightBracketToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for RightBracketToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for RightBracketToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for RightBracketToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for RightBracketToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for RightBracketToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
 }
 
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+#[derive(Clone, Debug, PartialEq,)]
 pub struct CodeBlockFenceToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for CodeBlockFenceToken {}
+
+impl AsRef<TokenContent> for CodeBlockFenceToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for CodeBlockFenceToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for CodeBlockFenceToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for CodeBlockFenceToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for CodeBlockFenceToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for CodeBlockFenceToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct HashtagToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for HashtagToken {}
+
+impl AsRef<TokenContent> for HashtagToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for HashtagToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for HashtagToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for HashtagToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for HashtagToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for HashtagToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct HeadingPrefixToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+
+impl TokenLike for HeadingPrefixToken {}
+
+impl AsRef<TokenContent> for HeadingPrefixToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for HeadingPrefixToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for HeadingPrefixToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for HeadingPrefixToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for HeadingPrefixToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for HeadingPrefixToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct IndentToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for IndentToken {}
+
+impl AsRef<TokenContent> for IndentToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for IndentToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for IndentToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for IndentToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for IndentToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for IndentToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct SpaceToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for SpaceToken {}
+
+impl AsRef<TokenContent> for SpaceToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for SpaceToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for SpaceToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for SpaceToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for SpaceToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for SpaceToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct LineBreakToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
 }
 
-#[derive(Clone, Debug, PartialEq, TokenLike)]
+impl TokenLike for LineBreakToken {}
+
+impl AsRef<TokenContent> for LineBreakToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for LineBreakToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
 pub struct WordToken{
-    position: TokenPosition,
-    literal: String,   
+    content: TokenContent,
+}
+
+impl TokenLike for WordToken {}
+
+impl AsRef<TokenContent> for WordToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for WordToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl TryFrom<TokenContent> for WordToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for WordToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for WordToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for WordToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
 }
 
 #[cfg(test)]
