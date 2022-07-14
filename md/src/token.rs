@@ -73,6 +73,10 @@ impl TokenLike for TokenContent {
     fn len(&self) -> usize {
         self.literal.len()
     }
+    
+    fn get_position(&self) -> Option<&TokenPosition> {
+        self.position.as_ref()
+    }
 }
 
 impl AsRef<TokenContent> for TokenContent {
@@ -147,7 +151,7 @@ pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
         todo!()
     }
     fn get_position(&self) -> Option<&TokenPosition> {
-        todo!()
+        self.as_ref().get_position()
     }
     fn get_mut_position(&mut self) -> Option<&mut TokenPosition> {
         todo!()

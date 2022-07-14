@@ -36,6 +36,15 @@ impl Lexer {
     }
 }
 
+impl From<&str> for Lexer {
+    fn from(s: &str) -> Lexer {
+        Lexer {
+            chars: s.chars().collect(),
+            position_buf: Some(TokenPosition::new()),
+            token_buf: None,
+        }
+    }
+}
 
 impl From<String> for Lexer {
     fn from(s: String) -> Lexer {
@@ -144,21 +153,7 @@ impl LexedToken {
     }
 }
 
-impl TokenLike for LexedToken {
-    fn len(&self) -> usize {
-        match self {
-            Self::BackQuote(x) => x.len(),
-            Self::Hash(x) => x.len(),
-            Self::Hyphen(x) => x.len(),
-            Self::Tilde(x) => x.len(),
-            Self::LeftBracket(x) => x.len(),
-            Self::RightBracket(x) => x.len(),
-            Self::Space(x) => x.len(),
-            Self::Word(x) => x.len(),
-            Self::LineBreak(x) => x.len(),
-        }
-    }
-}
+impl TokenLike for LexedToken {}
 
 impl AsRef<TokenContent> for LexedToken {
     fn as_ref(&self) -> &TokenContent {
@@ -305,7 +300,6 @@ impl TryFrom<&mut VecDeque<char>> for LexedToken {
 mod tests {
     use super::*;
 
-    /*
     #[test]
     fn test_lexer() {
         const s: &str = r#######"# Heading
@@ -325,81 +319,83 @@ Paragraph.
     - [ ] Child task
     - Child note
 "#######;
-        let v: Vec<Token> = vec![
-            Token{line: 1, column: 1, kind: TokenKind::HeaderPrefix, literal: "#".to_string()},
-            Token{line: 1, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 1, column: 3, kind: TokenKind::Text, literal: "Heading".to_string()},
-            Token{line: 1, column: 10, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 2, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 3, column: 1, kind: TokenKind::Text, literal: "Paragraph.".to_string()},
-            Token{line: 3, column: 11, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 4, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 5, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
-            Token{line: 5, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 5, column: 4, kind: TokenKind::Text, literal: "List".to_string()},
-            Token{line: 5, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 6, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 7, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 7, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 7, column: 3, kind: TokenKind::Text, literal: "Note1".to_string()},
-            Token{line: 7, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 8, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 8, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 8, column: 3, kind: TokenKind::Text, literal: "Note2".to_string()},
-            Token{line: 8, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 9, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
-            Token{line: 9, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 9, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 9, column: 7, kind: TokenKind::Text, literal: "Child".to_string()},
-            Token{line: 9, column: 12, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 9, column: 13, kind: TokenKind::Text, literal: "note".to_string()},
-            Token{line: 9, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 10, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 11, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
-            Token{line: 11, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 11, column: 4, kind: TokenKind::Text, literal: "Check".to_string()},
-            Token{line: 11, column: 9, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 11, column: 10, kind: TokenKind::Text, literal: "list".to_string()},
-            Token{line: 11, column: 14, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 12, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 13, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 13, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 13, column: 3, kind: TokenKind::LBracket, literal: "[".to_string()},
-            Token{line: 13, column: 4, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 13, column: 5, kind: TokenKind::RBracket, literal: "]".to_string()},
-            Token{line: 13, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 13, column: 7, kind: TokenKind::Text, literal: "Task1".to_string()},
-            Token{line: 13, column: 12, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 14, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 14, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 14, column: 3, kind: TokenKind::LBracket, literal: "[".to_string()},
-            Token{line: 14, column: 4, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 14, column: 5, kind: TokenKind::RBracket, literal: "]".to_string()},
-            Token{line: 14, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 14, column: 7, kind: TokenKind::Text, literal: "Task2".to_string()},
-            Token{line: 14, column: 12, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 15, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
-            Token{line: 15, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 15, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 15, column: 7, kind: TokenKind::LBracket, literal: "[".to_string()},
-            Token{line: 15, column: 8, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 15, column: 9, kind: TokenKind::RBracket, literal: "]".to_string()},
-            Token{line: 15, column: 10, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 15, column: 11, kind: TokenKind::Text, literal: "Child".to_string()},
-            Token{line: 15, column: 16, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 15, column: 17, kind: TokenKind::Text, literal: "task".to_string()},
-            Token{line: 15, column: 21, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-            Token{line: 16, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()},
-            Token{line: 16, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
-            Token{line: 16, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 16, column: 7, kind: TokenKind::Text, literal: "Child".to_string()},
-            Token{line: 16, column: 12, kind: TokenKind::Space, literal: " ".to_string()},
-            Token{line: 16, column: 13, kind: TokenKind::Text, literal: "note".to_string()},
-            Token{line: 16, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
+        use LexedToken::*;
+        let v: Vec<LexedToken> = vec![
+            HashToken::try_from(( 1,  1, "#")).unwrap().into(),
+            SpaceToken::try_from((1,  2, " ")).unwrap().into(),
+            WordToken::try_from(( 1,  3, "Heading")).unwrap().into(),
+            LineBreakToken::try_from(( 1, 10, "\n")).unwrap().into(),
+            LineBreakToken::try_from(( 2,  1, "\n")).unwrap().into(),
+            WordToken::try_from(( 3,  1, "Paragraph.")).unwrap().into(),
+            LineBreakToken::try_from(( 3, 11, "\n")).unwrap().into(),
+            LineBreakToken::try_from(( 4,  1, "\n")).unwrap().into(),
+            HashToken::try_from(( 5,  1, "#")).unwrap().into(),
+            HashToken::try_from(( 5,  2, "#")).unwrap().into(),
+            SpaceToken::try_from(( 5,  3, " ")).unwrap().into(),
+            WordToken::try_from(( 5,  4, "List")).unwrap().into(),
+            LineBreakToken::try_from(( 5,  8, "\n")).unwrap().into(),
+            LineBreakToken::try_from(( 6,  1, "\n")).unwrap().into(),
+            HyphenToken::try_from(( 7,  1, "-")).unwrap().into(),
+            SpaceToken::try_from(( 7,  2, " ")).unwrap().into(),
+            WordToken::try_from(( 7,  3, "Note1")).unwrap().into(),
+            LineBreakToken::try_from(( 7,  8, "\n")).unwrap().into(),
+            HyphenToken::try_from(( 8,  1, "-")).unwrap().into(),
+            SpaceToken::try_from(( 8,  2, " ")).unwrap().into(),
+            WordToken::try_from(( 8,  3, "Note2")).unwrap().into(),
+            LineBreakToken::try_from(( 8,  8, "\n")).unwrap().into(),
+            SpaceToken::try_from(( 9,  1, "    ")).unwrap().into(),
+            HyphenToken::try_from(( 9,  5, "-")).unwrap().into(),
+            SpaceToken::try_from(( 9,  6, " ")).unwrap().into(),
+            WordToken::try_from(( 9,  7, "Child")).unwrap().into(),
+            SpaceToken::try_from(( 9, 12, " ")).unwrap().into(),
+            WordToken::try_from(( 9, 13, "note")).unwrap().into(),
+            LineBreakToken::try_from(( 9, 17, "\n")).unwrap().into(),
+            LineBreakToken::try_from((10,  1, "\n")).unwrap().into(),
+            HashToken::try_from((11,  1, "#")).unwrap().into(),
+            HashToken::try_from((11,  2, "#")).unwrap().into(),
+            SpaceToken::try_from((11,  3, " ")).unwrap().into(),
+            WordToken::try_from((11,  4, "Check")).unwrap().into(),
+            SpaceToken::try_from((11,  9, " ")).unwrap().into(),
+            WordToken::try_from((11, 10, "list")).unwrap().into(),
+            LineBreakToken::try_from((11, 14, "\n")).unwrap().into(),
+            LineBreakToken::try_from((12,  1, "\n")).unwrap().into(),
+            HyphenToken::try_from((13,  1, "-")).unwrap().into(),
+            SpaceToken::try_from((13,  2, " ")).unwrap().into(),
+            LeftBracketToken::try_from((13,  3, "[")).unwrap().into(),
+            SpaceToken::try_from((13,  4, " ")).unwrap().into(),
+            RightBracketToken::try_from((13,  5, "]")).unwrap().into(),
+            SpaceToken::try_from((13,  6, " ")).unwrap().into(),
+            WordToken::try_from((13,  7, "Task1")).unwrap().into(),
+            LineBreakToken::try_from((13, 12, "\n")).unwrap().into(),
+            HyphenToken::try_from((14,  1, "-")).unwrap().into(),
+            SpaceToken::try_from((14,  2, " ")).unwrap().into(),
+            LeftBracketToken::try_from((14,  3, "[")).unwrap().into(),
+            SpaceToken::try_from((14,  4, " ")).unwrap().into(),
+            RightBracketToken::try_from((14,  5, "]")).unwrap().into(),
+            SpaceToken::try_from((14,  6, " ")).unwrap().into(),
+            WordToken::try_from((14,  7, "Task2")).unwrap().into(),
+            LineBreakToken::try_from((14, 12, "\n")).unwrap().into(),
+            SpaceToken::try_from((15,  1, "    ")).unwrap().into(),
+            HyphenToken::try_from((15,  5, "-")).unwrap().into(),
+            SpaceToken::try_from((15,  6, " ")).unwrap().into(),
+            LeftBracketToken::try_from((15,  7, "[")).unwrap().into(),
+            SpaceToken::try_from((15,  8, " ")).unwrap().into(),
+            RightBracketToken::try_from((15,  9, "]")).unwrap().into(),
+            SpaceToken::try_from((15, 10, " ")).unwrap().into(),
+            WordToken::try_from((15, 11, "Child")).unwrap().into(),
+            SpaceToken::try_from((15, 16, " ")).unwrap().into(),
+            WordToken::try_from((15, 17, "task")).unwrap().into(),
+            LineBreakToken::try_from((15, 21, "\n")).unwrap().into(),
+            SpaceToken::try_from((16,  1, "    ")).unwrap().into(),
+            HyphenToken::try_from((16,  5, "-")).unwrap().into(),
+            SpaceToken::try_from((16,  6, " ")).unwrap().into(),
+            WordToken::try_from((16,  7, "Child")).unwrap().into(),
+            SpaceToken::try_from((16, 12, " ")).unwrap().into(),
+            WordToken::try_from((16, 13, "note")).unwrap().into(),
+            LineBreakToken::try_from((16, 17, "\n")).unwrap().into(),
         ];
-        let t: Vec<Token> = Lexer::from(s).collect();
+        let t: Vec<LexedToken> = Lexer::from(s).collect();
         assert_eq!(t, v);
         
     }
-    */
 }
