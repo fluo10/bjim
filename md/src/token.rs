@@ -69,6 +69,12 @@ pub struct TokenContent {
     literal: String, 
 }
 
+impl TokenLike for TokenContent {
+    fn len(&self) -> usize {
+        self.literal.len()
+    }
+}
+
 impl AsRef<TokenContent> for TokenContent {
     fn as_ref(&self) -> &TokenContent {
         self
@@ -147,7 +153,7 @@ pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
         todo!()
     }
     fn len(&self) -> usize {
-        todo!()
+        self.as_ref().len()
     }
     fn has_position(&self) -> bool {
         todo!()
@@ -157,206 +163,6 @@ pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
     }
     fn insert_position(&mut self, p: TokenPosition) {
         self.as_mut().position.insert(p);
-    }
-}
-
-#[derive(Clone, Debug, PartialEq)]
-pub enum LexedToken {
-
-    // Single char token
-    //Asterisk(AsteriskToken),
-    BackQuote(BackQuoteToken),
-    Hash(HashToken),
-    Hyphen(HyphenToken),
-    //Plus(PlusToken),
-    Tilde(TildeToken),
-    //LParen,
-    //RParen,
-    LeftBracket(LeftBracketToken),
-    RightBracket(RightBracketToken),
-
-    // multiple char token
-    Space(SpaceToken),
-    Word(WordToken),
-
-    LineBreak(LineBreakToken),
-
-}
-
-impl LexedToken {
-    pub fn is_back_quote(&self) -> bool {   
-        match self {
-            Self::BackQuote(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_hash(&self) -> bool {
-        match self {
-            Self::Hash(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_hyphen(&self) -> bool {
-        match self {
-            Self::Hyphen(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_tilde(&self) -> bool {
-        match self {
-            Self::Tilde(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_left_bracket(&self) -> bool {
-        match self {
-            Self::LeftBracket(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_right_bracket(&self) -> bool {
-        match self {
-            Self::RightBracket(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_space(&self) -> bool {
-        match self {
-            Self::Space(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_word(&self) -> bool {
-        match self {
-            Self::Word(_) => true,
-            _ => false
-        }
-    }
-    pub fn is_line_break(&self) -> bool {
-        match self {
-            Self::LineBreak(_) => true,
-            _ => false
-        }
-    }
-}
-
-impl TokenLike for LexedToken {
-    fn len(&self) -> usize {
-        match self {
-            Self::BackQuote(x) => x.len(),
-            Self::Hash(x) => x.len(),
-            Self::Hyphen(x) => x.len(),
-            Self::Tilde(x) => x.len(),
-            Self::LeftBracket(x) => x.len(),
-            Self::RightBracket(x) => x.len(),
-            Self::Space(x) => x.len(),
-            Self::Word(x) => x.len(),
-            Self::LineBreak(x) => x.len(),
-        }
-    }
-}
-
-impl AsRef<TokenContent> for LexedToken {
-    fn as_ref(&self) -> &TokenContent {
-        match self {
-            Self::BackQuote(x) => x.as_ref(),
-            Self::Hash(x) => x.as_ref(),
-            Self::Hyphen(x) => x.as_ref(),
-            Self::Tilde(x) => x.as_ref(),
-            Self::LeftBracket(x) => x.as_ref(),
-            Self::RightBracket(x) => x.as_ref(),
-            Self::Space(x) => x.as_ref(),
-            Self::Word(x) => x.as_ref(),
-            Self::LineBreak(x) => x.as_ref(),
-        }
-    }
-}
-
-impl AsMut<TokenContent> for LexedToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        use LexedToken::*;
-        match self {
-            BackQuote(x) => x.as_mut(),
-            Hash(x) => x.as_mut(),
-            Hyphen(x) => x.as_mut(),
-            Tilde(x) => x.as_mut(),
-            LeftBracket(x) => x.as_mut(),
-            RightBracket(x) => x.as_mut(),
-            Space(x) => x.as_mut(),
-            Word(x) => x.as_mut(),
-            LineBreak(x) => x.as_mut(),
-        }
-    }
-}
-
-impl fmt::Display for LexedToken{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use LexedToken::*;
-        match self {
-            BackQuote(x) => x.fmt(f),
-            Hash(x) => x.fmt(f),
-            Hyphen(x) => x.fmt(f),
-            Tilde(x) => x.fmt(f),
-            LeftBracket(x) => x.fmt(f),
-            RightBracket(x) => x.fmt(f),
-            Space(x) => x.fmt(f),
-            Word(x) => x.fmt(f),
-            LineBreak(x) => x.fmt(f),
-        }
-    }
-}
-
-impl From<BackQuoteToken> for LexedToken {
-    fn from(t: BackQuoteToken) -> Self {
-        Self::BackQuote(t)
-    }
-}
-
-impl From<HashToken> for LexedToken {
-    fn from(t: HashToken) -> Self {
-        Self::Hash(t)
-    }
-}
-
-impl From<HyphenToken> for LexedToken {
-    fn from(t: HyphenToken) -> Self {
-        Self::Hyphen(t)
-    }
-}
-
-impl From<TildeToken> for LexedToken {
-    fn from(t: TildeToken) -> Self {
-        Self::Tilde(t)
-    }
-}
-
-impl From<LeftBracketToken> for LexedToken {
-    fn from(t: LeftBracketToken) -> Self {
-        Self::LeftBracket(t)
-    }
-}
-
-impl From<RightBracketToken> for LexedToken {
-    fn from(t: RightBracketToken) -> Self {
-        Self::RightBracket(t)
-    }
-}
-
-impl From<SpaceToken> for LexedToken {
-    fn from(t: SpaceToken) -> Self {
-        Self::Space(t)
-    }
-}
-
-impl From<WordToken> for LexedToken {
-    fn from(t: WordToken) -> Self {
-        Self::Word(t)
-    }
-}
-
-impl From<LineBreakToken> for LexedToken {
-    fn from(t: LineBreakToken) -> Self {
-        Self::LineBreak(t)
     }
 }
 
