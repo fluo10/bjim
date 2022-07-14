@@ -5,6 +5,7 @@ use crate::errors::ParseError;
 
 
 use std::convert::From;
+use std::collections::VecDeque;
 use std::fmt;
 
 type Result<T> = std::result::Result<T, ParseError>;
@@ -40,6 +41,12 @@ impl BulletChar{
             _ => None
         }
     }
+    pub fn contains(c: &char) -> bool {
+        match c {
+            HYPHEN_CHAR | ASTERISK_CHAR | PLUS_CHAR => true,
+            _ => false
+        }
+    }
 }
 
 impl fmt::Display for BulletChar {
@@ -56,8 +63,6 @@ impl TryFrom<char> for BulletChar {
     }
 }
 
-pub enum CodeBlockFenceChar{}
-
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenContent {
     position: Option<TokenPosition>,
@@ -73,6 +78,20 @@ impl AsRef<TokenContent> for TokenContent {
 impl AsMut<TokenContent> for TokenContent {
     fn as_mut(&mut self) -> &mut TokenContent {
         self
+    }
+}
+
+impl fmt::Display for TokenContent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.literal)
+    }
+}
+impl From<char> for TokenContent {
+    fn from(c: char) -> Self {
+        TokenContent{
+            position: None,
+            literal: String::from(c),
+        }
     }
 }
 
@@ -136,184 +155,243 @@ pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
     fn take_position(&mut self) -> Option<TokenPosition> {
         todo!()
     }
+    fn insert_position(&mut self, p: TokenPosition) {
+        self.as_mut().position.insert(p);
+    }
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum RawToken {
+pub enum LexedToken {
 
-    // Beginning of line
-    HeadingPrefix(HeadingPrefixToken),
-    CodeBlockFence(CodeBlockFenceToken),
-    Indent(IndentToken),
-    Bullet(BulletToken),
-    //Quotation,
-
-    Hashtag(HashtagToken),
+    // Single char token
+    //Asterisk(AsteriskToken),
+    BackQuote(BackQuoteToken),
+    Hash(HashToken),
+    Hyphen(HyphenToken),
+    //Plus(PlusToken),
+    Tilde(TildeToken),
     //LParen,
     //RParen,
     LeftBracket(LeftBracketToken),
     RightBracket(RightBracketToken),
+
+    // multiple char token
     Space(SpaceToken),
     Word(WordToken),
 
-    // End of line
     LineBreak(LineBreakToken),
+
 }
 
-impl RawToken {
-    
-    /*pub fn len(&self) -> usize {
+impl LexedToken {
+    pub fn is_back_quote(&self) -> bool {   
         match self {
-            RawToken::HeadingPrefix(x) => x.len(),
-            RawToken::CodeBlockFence(x) => x.len(),
-            RawToken::Indent(x) => x.len(),
-            RawToken::Bullet(x) => x.len(),
-            RawToken::Hashtag(x) => x.len(),
-            RawToken::LeftBracket(x) => x.len(),
-            RawToken::RightBracket(x) => x.len(),
-            RawToken::Space(x) => x.len(),
-            RawToken::Word(x) => x.len(),
-            RawToken::LineBreak(x) => x.len(),
+            Self::BackQuote(_) => true,
+            _ => false
         }
     }
-    */
-    
-
-    //pub fn is_heading_prefix(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn heading_prefix(&self) -> Option<HeadingPrefixToken> {
-        //todo!()
-    //}
-    //pub fn is_code_block_fence(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_indent(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_bullet(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_text(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_hashtag(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_left_bracket(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_right_bracket(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_space(&self) -> bool {
-        //todo!()
-    //}
-    //pub fn is_line_break(&self) -> bool {
-        //todo!()
-    //}
+    pub fn is_hash(&self) -> bool {
+        match self {
+            Self::Hash(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_hyphen(&self) -> bool {
+        match self {
+            Self::Hyphen(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_tilde(&self) -> bool {
+        match self {
+            Self::Tilde(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_left_bracket(&self) -> bool {
+        match self {
+            Self::LeftBracket(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_right_bracket(&self) -> bool {
+        match self {
+            Self::RightBracket(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_space(&self) -> bool {
+        match self {
+            Self::Space(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_word(&self) -> bool {
+        match self {
+            Self::Word(_) => true,
+            _ => false
+        }
+    }
+    pub fn is_line_break(&self) -> bool {
+        match self {
+            Self::LineBreak(_) => true,
+            _ => false
+        }
+    }
 }
 
+impl TokenLike for LexedToken {
+    fn len(&self) -> usize {
+        match self {
+            Self::BackQuote(x) => x.len(),
+            Self::Hash(x) => x.len(),
+            Self::Hyphen(x) => x.len(),
+            Self::Tilde(x) => x.len(),
+            Self::LeftBracket(x) => x.len(),
+            Self::RightBracket(x) => x.len(),
+            Self::Space(x) => x.len(),
+            Self::Word(x) => x.len(),
+            Self::LineBreak(x) => x.len(),
+        }
+    }
+}
 
-/*
-impl fmt::Display for RawToken{
+impl AsRef<TokenContent> for LexedToken {
+    fn as_ref(&self) -> &TokenContent {
+        match self {
+            Self::BackQuote(x) => x.as_ref(),
+            Self::Hash(x) => x.as_ref(),
+            Self::Hyphen(x) => x.as_ref(),
+            Self::Tilde(x) => x.as_ref(),
+            Self::LeftBracket(x) => x.as_ref(),
+            Self::RightBracket(x) => x.as_ref(),
+            Self::Space(x) => x.as_ref(),
+            Self::Word(x) => x.as_ref(),
+            Self::LineBreak(x) => x.as_ref(),
+        }
+    }
+}
+
+impl AsMut<TokenContent> for LexedToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        use LexedToken::*;
+        match self {
+            BackQuote(x) => x.as_mut(),
+            Hash(x) => x.as_mut(),
+            Hyphen(x) => x.as_mut(),
+            Tilde(x) => x.as_mut(),
+            LeftBracket(x) => x.as_mut(),
+            RightBracket(x) => x.as_mut(),
+            Space(x) => x.as_mut(),
+            Word(x) => x.as_mut(),
+            LineBreak(x) => x.as_mut(),
+        }
+    }
+}
+
+impl fmt::Display for LexedToken{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        use LexedToken::*;
         match self {
-            RawToken::HeadingPrefix(x) => write!(f, "{}", x),
-            RawToken::CodeBlockFence(x) => write!(f, "{}", x),
-            RawToken::Indent(x) => write!(f, "{}", x),
-            RawToken::Bullet(x) => write!(f, "{}", x),
-            RawToken::Hashtag(x) => write!(f, "{}", x),
-            RawToken::LeftBracket(x) => write!(f, "{}", x),
-            RawToken::RightBracket(x) => write!(f, "{}", x),
-            RawToken::Space(x) => write!(f, "{}", x),
-            RawToken::Word(x) => write!(f, "{}", x),
-            RawToken::LineBreak(x) => write!(f, "{}", x),
+            BackQuote(x) => x.fmt(f),
+            Hash(x) => x.fmt(f),
+            Hyphen(x) => x.fmt(f),
+            Tilde(x) => x.fmt(f),
+            LeftBracket(x) => x.fmt(f),
+            RightBracket(x) => x.fmt(f),
+            Space(x) => x.fmt(f),
+            Word(x) => x.fmt(f),
+            LineBreak(x) => x.fmt(f),
         }
     }
 }
-*/
 
-impl From<HeadingPrefixToken> for RawToken {
-    fn from(t: HeadingPrefixToken) -> Self {
-        Self::HeadingPrefix(t)
+impl From<BackQuoteToken> for LexedToken {
+    fn from(t: BackQuoteToken) -> Self {
+        Self::BackQuote(t)
     }
 }
 
-impl From<CodeBlockFenceToken> for RawToken {
-    fn from(t: CodeBlockFenceToken) -> Self {
-        Self::CodeBlockFence(t)
+impl From<HashToken> for LexedToken {
+    fn from(t: HashToken) -> Self {
+        Self::Hash(t)
     }
 }
 
-impl From<IndentToken> for RawToken {
-    fn from(t: IndentToken) -> Self {
-        Self::Indent(t)
+impl From<HyphenToken> for LexedToken {
+    fn from(t: HyphenToken) -> Self {
+        Self::Hyphen(t)
     }
 }
 
-impl From<BulletToken> for RawToken {
-    fn from(t: BulletToken) -> Self {
-        Self::Bullet(t)
+impl From<TildeToken> for LexedToken {
+    fn from(t: TildeToken) -> Self {
+        Self::Tilde(t)
     }
 }
 
-impl From<HashtagToken> for RawToken {
-    fn from(t: HashtagToken) -> Self {
-        Self::Hashtag(t)
-    }
-}
-
-impl From<LeftBracketToken> for RawToken {
+impl From<LeftBracketToken> for LexedToken {
     fn from(t: LeftBracketToken) -> Self {
         Self::LeftBracket(t)
     }
 }
 
-impl From<RightBracketToken> for RawToken {
+impl From<RightBracketToken> for LexedToken {
     fn from(t: RightBracketToken) -> Self {
         Self::RightBracket(t)
     }
 }
 
-impl From<SpaceToken> for RawToken {
+impl From<SpaceToken> for LexedToken {
     fn from(t: SpaceToken) -> Self {
         Self::Space(t)
     }
 }
 
-impl From<WordToken> for RawToken {
+impl From<WordToken> for LexedToken {
     fn from(t: WordToken) -> Self {
         Self::Word(t)
     }
 }
 
-impl From<LineBreakToken> for RawToken {
+impl From<LineBreakToken> for LexedToken {
     fn from(t: LineBreakToken) -> Self {
         Self::LineBreak(t)
     }
 }
 
 #[derive(Clone, Debug, PartialEq,)]
-pub struct BulletToken{
+pub struct BackQuoteToken {
     content: TokenContent,
 }
 
-impl TokenLike for BulletToken {}
+impl TokenLike for BackQuoteToken {}
 
-impl AsMut<TokenContent> for BulletToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl AsRef<TokenContent> for BulletToken {
+impl AsRef<TokenContent> for BackQuoteToken {
     fn as_ref(&self) -> &TokenContent {
         &self.content
     }
 }
 
-impl TryFrom<TokenContent> for BulletToken {
+impl AsMut<TokenContent> for BackQuoteToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl fmt::Display for BackQuoteToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for BackQuoteToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
+    }
+}
+impl TryFrom<TokenContent> for BackQuoteToken {
     type Error = ParseError;
     fn try_from(t: TokenContent) -> Result<Self> {
         Ok(Self{
@@ -322,24 +400,250 @@ impl TryFrom<TokenContent> for BulletToken {
     }
 }
 
-impl TryFrom<&str> for BulletToken {
+impl TryFrom<&str> for BackQuoteToken {
     type Error = ParseError;
     fn try_from(s: &str) -> Result<Self> {
         TokenContent::from(s).try_into()
     }
 }
 
-impl TryFrom<String> for BulletToken {
+impl TryFrom<String> for BackQuoteToken {
     type Error = ParseError;
     fn try_from(s: String) -> Result<Self> {
         TokenContent::from(s).try_into()
     }
 }
 
-impl TryFrom<(usize, usize, &str)> for BulletToken {
+impl TryFrom<(usize, usize, &str)> for BackQuoteToken {
     type Error = ParseError;
     fn try_from(t: (usize, usize, &str)) -> Result<Self> {
         TokenContent::from(t).try_into()
+    }
+}
+
+impl TryFrom<&mut VecDeque<char>> for BackQuoteToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.front() {
+            Some('`') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError)
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
+pub struct HashToken{
+    content: TokenContent,
+}
+
+impl TokenLike for HashToken {}
+
+impl AsRef<TokenContent> for HashToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for HashToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+        
+impl fmt::Display for HashToken{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for HashToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
+    }
+}
+
+impl TryFrom<TokenContent> for HashToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for HashToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for HashToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for HashToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+impl TryFrom<&mut VecDeque<char>> for HashToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.front() {
+            Some(&'#') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError) 
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
+pub struct HyphenToken{
+    content: TokenContent,
+}
+
+impl TokenLike for HyphenToken {}
+
+impl AsRef<TokenContent> for HyphenToken {
+    fn as_ref(&self) -> &TokenContent{
+        &self.content    
+    }
+}
+
+impl AsMut<TokenContent> for HyphenToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl fmt::Display for HyphenToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for HyphenToken{
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
+    }
+}
+
+impl TryFrom<TokenContent> for HyphenToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for HyphenToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for HyphenToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for HyphenToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+impl TryFrom<&mut VecDeque<char>> for HyphenToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.get(0) {
+            Some(&'-') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError)
+        } 
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
+pub struct TildeToken{
+    content: TokenContent,
+}
+
+impl TokenLike for TildeToken {}
+
+impl AsRef<TokenContent> for TildeToken {
+    fn as_ref(&self) -> &TokenContent {
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for TildeToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl fmt::Display for TildeToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for TildeToken{
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
+    }
+}
+
+impl TryFrom<TokenContent> for TildeToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<&str> for TildeToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for TildeToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for TildeToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+impl TryFrom<&mut VecDeque<char>> for TildeToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.front() {
+            Some(&'~') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError)
+        } 
     }
 }
 
@@ -359,6 +663,19 @@ impl AsRef<TokenContent> for LeftBracketToken {
 impl AsMut<TokenContent> for LeftBracketToken {
     fn as_mut(&mut self) -> &mut TokenContent {
         &mut self.content
+    }
+}
+
+impl fmt::Display for LeftBracketToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
     }
 }
 
@@ -392,6 +709,16 @@ impl TryFrom<(usize, usize, &str)> for LeftBracketToken {
     }
 }
 
+impl TryFrom<&mut VecDeque<char>> for LeftBracketToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.front() {
+            Some(&'[') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError)
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq,)]
 pub struct RightBracketToken{
     content: TokenContent,
@@ -408,6 +735,20 @@ impl AsRef<TokenContent> for RightBracketToken {
 impl AsMut<TokenContent> for RightBracketToken {
     fn as_mut(&mut self) -> &mut TokenContent {
         &mut self.content
+    }
+}
+
+impl fmt::Display for RightBracketToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+
+impl TryFrom<char> for RightBracketToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
     }
 }
 
@@ -441,200 +782,13 @@ impl TryFrom<(usize, usize, &str)> for RightBracketToken {
     }
 }
 
-
-#[derive(Clone, Debug, PartialEq,)]
-pub struct CodeBlockFenceToken{
-    content: TokenContent,
-}
-
-impl TokenLike for CodeBlockFenceToken {}
-
-impl AsRef<TokenContent> for CodeBlockFenceToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for CodeBlockFenceToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl TryFrom<TokenContent> for CodeBlockFenceToken {
+impl TryFrom<&mut VecDeque<char>> for RightBracketToken {
     type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for CodeBlockFenceToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for CodeBlockFenceToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for CodeBlockFenceToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq,)]
-pub struct HashtagToken{
-    content: TokenContent,
-}
-
-impl TokenLike for HashtagToken {}
-
-impl AsRef<TokenContent> for HashtagToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for HashtagToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl TryFrom<TokenContent> for HashtagToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for HashtagToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for HashtagToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for HashtagToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq,)]
-pub struct HeadingPrefixToken{
-    content: TokenContent,
-}
-
-impl TokenLike for HeadingPrefixToken {}
-
-impl AsRef<TokenContent> for HeadingPrefixToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for HeadingPrefixToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl TryFrom<TokenContent> for HeadingPrefixToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for HeadingPrefixToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for HeadingPrefixToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for HeadingPrefixToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
-
-#[derive(Clone, Debug, PartialEq,)]
-pub struct IndentToken{
-    content: TokenContent,
-}
-
-impl TokenLike for IndentToken {}
-
-impl AsRef<TokenContent> for IndentToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for IndentToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl TryFrom<TokenContent> for IndentToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for IndentToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for IndentToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for IndentToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match q.front() {
+            Some(']') => q.pop_front().unwrap().try_into(),
+            _ => Err(ParseError::ParseTokenError)
+        }
     }
 }
 
@@ -654,6 +808,19 @@ impl AsRef<TokenContent> for SpaceToken {
 impl AsMut<TokenContent> for SpaceToken {
     fn as_mut(&mut self) -> &mut TokenContent {
         &mut self.content
+    }
+}
+
+impl fmt::Display for SpaceToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for SpaceToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
     }
 }
 
@@ -687,52 +854,21 @@ impl TryFrom<(usize, usize, &str)> for SpaceToken {
     }
 }
 
-#[derive(Clone, Debug, PartialEq,)]
-pub struct LineBreakToken{
-    content: TokenContent,
-}
-
-impl TokenLike for LineBreakToken {}
-
-impl AsRef<TokenContent> for LineBreakToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for LineBreakToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl TryFrom<TokenContent> for LineBreakToken {
+impl TryFrom<&mut VecDeque<char>> for SpaceToken {
     type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        let mut buf = String::new();
+        while let Some(x) = q.front() {
+            match x {
+                &' ' => buf.push(q.pop_front().unwrap()),
+                _ => break
+            }
+        }
+        if buf.len() > 0 {
+            buf.try_into()
+        } else {
+            Err(ParseError::ParseTokenError)
+        }
     }
 }
 
@@ -755,12 +891,17 @@ impl AsMut<TokenContent> for WordToken {
     }
 }
 
-impl TryFrom<TokenContent> for WordToken {
+impl fmt::Display for WordToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+
+impl TryFrom<char> for WordToken {
     type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
     }
 }
 
@@ -778,6 +919,16 @@ impl TryFrom<String> for WordToken {
     }
 }
 
+impl TryFrom<TokenContent> for WordToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+
 impl TryFrom<(usize, usize, &str)> for WordToken {
     type Error = ParseError;
     fn try_from(t: (usize, usize, &str)) -> Result<Self> {
@@ -785,21 +936,168 @@ impl TryFrom<(usize, usize, &str)> for WordToken {
     }
 }
 
+impl TryFrom<&mut VecDeque<char>> for WordToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        let mut buf = String::new();
+        while let Some(x) = q.front() {
+            match x {
+                &'`' | &'#' | &'-' | &'-' | &'[' | &']' | &' ' | &'\n' | &'\r' => {
+                    break;
+                },
+                _ => buf.push(q.pop_front().unwrap())
+            }
+        }
+        if buf.len() > 0 {
+            buf.try_into()
+        } else {
+            Err(ParseError::ParseTokenError)
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
+pub struct LineBreakToken{
+    content: TokenContent,
+}
+
+impl TokenLike for LineBreakToken {}
+
+impl AsRef<TokenContent> for LineBreakToken {
+    fn as_ref(&self) -> &TokenContent{
+        &self.content
+    }
+}
+
+impl AsMut<TokenContent> for LineBreakToken {
+    fn as_mut(&mut self) -> &mut TokenContent {
+        &mut self.content
+    }
+}
+
+impl fmt::Display for LineBreakToken {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.content.fmt(f)
+    }
+}
+
+impl TryFrom<char> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(c: char) -> Result<Self> {
+        TokenContent::from(c).try_into()
+    }
+}
+
+impl TryFrom<&str> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(s: &str) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<String> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(s: String) -> Result<Self> {
+        TokenContent::from(s).try_into()
+    }
+}
+
+impl TryFrom<TokenContent> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(t: TokenContent) -> Result<Self> {
+        Ok(Self{
+            content: t,
+        })
+    }
+}
+
+impl TryFrom<(usize, usize, &str)> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+        TokenContent::from(t).try_into()
+    }
+}
+
+
+impl TryFrom<&mut VecDeque<char>> for LineBreakToken {
+    type Error = ParseError;
+    fn try_from(q: &mut VecDeque<char>) -> Result<Self> {
+        match (q.get(0), q.get(1)) {
+            (Some(&'\n'), _) => q.pop_front().unwrap().try_into(),
+            (Some(&'\r'), Some(&'\n')) => {
+                let mut s = String::from(q.pop_front().unwrap());
+                s.push(q.pop_front().unwrap());
+                s.try_into()
+            },
+            _ => Err(ParseError::ParseTokenError)
+        }
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn assert_str_token<T>(s: &'static str, t: T )
+    where T: for<'a> TryFrom<&'a mut VecDeque<char>, Error = ParseError> + std::fmt::Debug + PartialEq,
+    {
+        assert_eq!(T::try_from(&mut s.chars().collect::<VecDeque<char>>()).unwrap(), t);
+    }
+
+    #[test]
+    fn back_quote() {
+        assert_str_token("`", BackQuoteToken::try_from("`").unwrap());
+    }
+
+    #[test]
+    fn hash() {
+        assert_str_token("# ", HashToken::try_from("#").unwrap());
+    }
+    
+    #[test]
+    fn tilde() {
+        assert_str_token("~ ", TildeToken::try_from("~").unwrap());
+    }
+
+    #[test]
+    fn left_bracket() {
+        assert_str_token("[ ", LeftBracketToken::try_from("[").unwrap());
+    }
+
+    #[test]
+    fn right_bracket() {
+        assert_str_token("] ", RightBracketToken::try_from("]").unwrap());
+    }
+    
+    #[test]
+    fn space() {
+        assert_str_token("  x", SpaceToken::try_from("  ").unwrap());
+    }
+
+    #[test]
+    fn word() {
+        assert_str_token("word ", WordToken::try_from("word").unwrap());
+    }
+    
+    #[test]
+    fn line_break() {
+        assert_str_token("\nnext line", LineBreakToken::try_from("\n").unwrap());
+    }
+    /*
     #[test] 
     fn enum_derive() {
         let token = LineBreakToken{
             position: (0, 0).into(),
             literal: "\n".into(),
         };
-        let raw_token = RawToken::LineBreak(token.clone());
+        let Lexed_token = LexedToken::LineBreak(token.clone());
 
-        assert!(raw_token.is_line_break());
+        assert!(Lexed_token.is_line_break());
         assert_eq!(raw_token.line_break(), Some(&token));
         assert_eq!(RawToken::from(token), raw_token);
     }
+    */
     /*
     #[test]
     fn Rawtoken() {
@@ -808,7 +1106,7 @@ mod tests {
             assert_eq!(Token::from(s), token);
         }
         assert_token("#", Token::Heading(1));
-        assert_token("-", Token::Bullet('-'));
+        assert_token("-", Token::Hyphen('-'));
         assert_token("*", Token::Bullet('*'));
         assert_token(" ", Token::Space(" "));
 
