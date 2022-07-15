@@ -153,109 +153,50 @@ impl LexedToken {
     }
 }
 
-impl TokenLike for LexedToken {}
-
-impl AsRef<TokenContent> for LexedToken {
-    fn as_ref(&self) -> &TokenContent {
-        match self {
-            Self::BackQuote(x) => x.as_ref(),
-            Self::Hash(x) => x.as_ref(),
-            Self::Hyphen(x) => x.as_ref(),
-            Self::Tilde(x) => x.as_ref(),
-            Self::LeftBracket(x) => x.as_ref(),
-            Self::RightBracket(x) => x.as_ref(),
-            Self::Space(x) => x.as_ref(),
-            Self::Word(x) => x.as_ref(),
-            Self::LineBreak(x) => x.as_ref(),
+macro_rules! token_enum_builder {
+    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
+        impl AsRef<TokenContent> for $enum_name {
+            fn as_ref(&self) -> &TokenContent {
+                match self {
+                    $(Self::$child_name(x) => x.as_ref(),)+
+                }
+            }
         }
-    }
-}
-
-impl AsMut<TokenContent> for LexedToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        use LexedToken::*;
-        match self {
-            BackQuote(x) => x.as_mut(),
-            Hash(x) => x.as_mut(),
-            Hyphen(x) => x.as_mut(),
-            Tilde(x) => x.as_mut(),
-            LeftBracket(x) => x.as_mut(),
-            RightBracket(x) => x.as_mut(),
-            Space(x) => x.as_mut(),
-            Word(x) => x.as_mut(),
-            LineBreak(x) => x.as_mut(),
+        impl AsMut<TokenContent> for $enum_name {
+            fn as_mut(&mut self) -> &mut TokenContent {
+                match self {
+                    $(Self::$child_name(x) => x.as_mut(),)+
+                }
+            }
         }
-    }
-}
-
-impl fmt::Display for LexedToken{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use LexedToken::*;
-        match self {
-            BackQuote(x) => x.fmt(f),
-            Hash(x) => x.fmt(f),
-            Hyphen(x) => x.fmt(f),
-            Tilde(x) => x.fmt(f),
-            LeftBracket(x) => x.fmt(f),
-            RightBracket(x) => x.fmt(f),
-            Space(x) => x.fmt(f),
-            Word(x) => x.fmt(f),
-            LineBreak(x) => x.fmt(f),
+        impl fmt::Display for $enum_name{
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                match self {
+                    $(Self::$child_name(x) => x.fmt(f),)+
+                }
+            }
         }
+        $(
+            impl From<$child_type> for $enum_name {
+                fn from(t: $child_type) -> Self {
+                    Self::$child_name(t)
+                }
+            }
+        )+
     }
 }
 
-impl From<BackQuoteToken> for LexedToken {
-    fn from(t: BackQuoteToken) -> Self {
-        Self::BackQuote(t)
-    }
-}
-
-impl From<HashToken> for LexedToken {
-    fn from(t: HashToken) -> Self {
-        Self::Hash(t)
-    }
-}
-
-impl From<HyphenToken> for LexedToken {
-    fn from(t: HyphenToken) -> Self {
-        Self::Hyphen(t)
-    }
-}
-
-impl From<TildeToken> for LexedToken {
-    fn from(t: TildeToken) -> Self {
-        Self::Tilde(t)
-    }
-}
-
-impl From<LeftBracketToken> for LexedToken {
-    fn from(t: LeftBracketToken) -> Self {
-        Self::LeftBracket(t)
-    }
-}
-
-impl From<RightBracketToken> for LexedToken {
-    fn from(t: RightBracketToken) -> Self {
-        Self::RightBracket(t)
-    }
-}
-
-impl From<SpaceToken> for LexedToken {
-    fn from(t: SpaceToken) -> Self {
-        Self::Space(t)
-    }
-}
-
-impl From<WordToken> for LexedToken {
-    fn from(t: WordToken) -> Self {
-        Self::Word(t)
-    }
-}
-
-impl From<LineBreakToken> for LexedToken {
-    fn from(t: LineBreakToken) -> Self {
-        Self::LineBreak(t)
+token_enum_builder!{
+    LexedToken {
+        BackQuote, BackQuoteToken,
+        Hash, HashToken,
+        Hyphen, HyphenToken,
+        Tilde, TildeToken,
+        LeftBracket, LeftBracketToken,
+        RightBracket, RightBracketToken,
+        Space, SpaceToken,
+        Word, WordToken,
+        LineBreak, LineBreakToken,
     }
 }
 

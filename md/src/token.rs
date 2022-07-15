@@ -69,16 +69,6 @@ pub struct TokenContent {
     literal: String, 
 }
 
-impl TokenLike for TokenContent {
-    fn len(&self) -> usize {
-        self.literal.len()
-    }
-    
-    fn get_position(&self) -> Option<&TokenPosition> {
-        self.position.as_ref()
-    }
-}
-
 impl AsRef<TokenContent> for TokenContent {
     fn as_ref(&self) -> &TokenContent {
         self
@@ -144,20 +134,33 @@ impl From<(usize, usize, String)> for TokenContent {
 }
 
 pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
+    fn get_literal(&self) -> &str;
+    fn get_mut_literal(&mut self) -> &mut str;
+    fn get_position(&self) -> Option<&TokenPosition>;
+    fn get_mut_position(&mut self) -> Option<&mut TokenPosition>;
+    fn len(&self) -> usize;
+    fn has_position(&self) -> bool;
+    fn take_position(&mut self) -> Option<TokenPosition>;
+    fn insert_position(&mut self, p: TokenPosition);
+}
+
+impl<T> TokenLike for T where
+T: AsRef<TokenContent> + AsMut<TokenContent>,
+{
     fn get_literal(&self) -> &str {
-        todo!()
+        &self.as_ref().literal
     }
     fn get_mut_literal(&mut self) -> &mut str {
-        todo!()
+        &mut self.as_mut().literal
     }
     fn get_position(&self) -> Option<&TokenPosition> {
-        self.as_ref().get_position()
+        self.as_ref().position.as_ref()
     }
     fn get_mut_position(&mut self) -> Option<&mut TokenPosition> {
-        todo!()
+        self.as_mut().position.as_mut()
     }
     fn len(&self) -> usize {
-        self.as_ref().len()
+        self.as_ref().literal.len()
     }
     fn has_position(&self) -> bool {
         todo!()
@@ -170,66 +173,64 @@ pub trait TokenLike: AsRef<TokenContent> + AsMut<TokenContent> {
     }
 }
 
+macro_rules! token_struct_builder {
+    ($struct_name:ident) => {
+        impl AsRef<TokenContent> for $struct_name {
+            fn as_ref(&self) -> &TokenContent {
+                &self.content
+            }
+        }
+        impl AsMut<TokenContent> for $struct_name {
+            fn as_mut(&mut self) -> &mut TokenContent {
+                &mut self.content
+            }
+        }
+        impl fmt::Display for $struct_name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.content.fmt(f)
+            }
+        }
+        impl TryFrom<char> for $struct_name {
+            type Error = ParseError;
+            fn try_from(c: char) -> Result<Self> {
+                TokenContent::from(c).try_into()
+            }
+        }
+        impl TryFrom<TokenContent> for $struct_name {
+            type Error = ParseError;
+            fn try_from(t: TokenContent) -> Result<Self> {
+                Ok(Self{
+                    content: t,
+                })
+            }
+        }
+        impl TryFrom<&str> for $struct_name {
+            type Error = ParseError;
+            fn try_from(s: &str) -> Result<Self> {
+                TokenContent::from(s).try_into()
+            }
+        }
+        impl TryFrom<String> for $struct_name {
+            type Error = ParseError;
+            fn try_from(s: String) -> Result<Self> {
+                TokenContent::from(s).try_into()
+            }
+        }
+        impl TryFrom<(usize, usize, &str)> for $struct_name {
+            type Error = ParseError;
+            fn try_from(t: (usize, usize, &str)) -> Result<Self> {
+                TokenContent::from(t).try_into()
+            }
+        }
+    } 
+}
+
 #[derive(Clone, Debug, PartialEq,)]
 pub struct BackQuoteToken {
     content: TokenContent,
 }
 
-impl TokenLike for BackQuoteToken {}
-
-impl AsRef<TokenContent> for BackQuoteToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for BackQuoteToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for BackQuoteToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for BackQuoteToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-impl TryFrom<TokenContent> for BackQuoteToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for BackQuoteToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for BackQuoteToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for BackQuoteToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(BackQuoteToken);
 
 impl TryFrom<&mut VecDeque<char>> for BackQuoteToken {
     type Error = ParseError;
@@ -246,62 +247,7 @@ pub struct HashToken{
     content: TokenContent,
 }
 
-impl TokenLike for HashToken {}
-
-impl AsRef<TokenContent> for HashToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for HashToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-        
-impl fmt::Display for HashToken{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for HashToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for HashToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for HashToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for HashToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for HashToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(HashToken);
 
 impl TryFrom<&mut VecDeque<char>> for HashToken {
     type Error = ParseError;
@@ -318,62 +264,7 @@ pub struct HyphenToken{
     content: TokenContent,
 }
 
-impl TokenLike for HyphenToken {}
-
-impl AsRef<TokenContent> for HyphenToken {
-    fn as_ref(&self) -> &TokenContent{
-        &self.content    
-    }
-}
-
-impl AsMut<TokenContent> for HyphenToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for HyphenToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for HyphenToken{
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for HyphenToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for HyphenToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for HyphenToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for HyphenToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(HyphenToken);
 
 impl TryFrom<&mut VecDeque<char>> for HyphenToken {
     type Error = ParseError;
@@ -390,62 +281,7 @@ pub struct TildeToken{
     content: TokenContent,
 }
 
-impl TokenLike for TildeToken {}
-
-impl AsRef<TokenContent> for TildeToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for TildeToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for TildeToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for TildeToken{
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for TildeToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for TildeToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for TildeToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for TildeToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(TildeToken);
 
 impl TryFrom<&mut VecDeque<char>> for TildeToken {
     type Error = ParseError;
@@ -462,62 +298,7 @@ pub struct LeftBracketToken{
     content: TokenContent,
 }
 
-impl TokenLike for LeftBracketToken {}
-
-impl AsRef<TokenContent> for LeftBracketToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for LeftBracketToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for LeftBracketToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for LeftBracketToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for LeftBracketToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for LeftBracketToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for LeftBracketToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for LeftBracketToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(LeftBracketToken);
 
 impl TryFrom<&mut VecDeque<char>> for LeftBracketToken {
     type Error = ParseError;
@@ -534,63 +315,7 @@ pub struct RightBracketToken{
     content: TokenContent,
 }
 
-impl TokenLike for RightBracketToken {}
-
-impl AsRef<TokenContent> for RightBracketToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for RightBracketToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for RightBracketToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-
-impl TryFrom<char> for RightBracketToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for RightBracketToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for RightBracketToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for RightBracketToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for RightBracketToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(RightBracketToken);
 
 impl TryFrom<&mut VecDeque<char>> for RightBracketToken {
     type Error = ParseError;
@@ -607,62 +332,7 @@ pub struct SpaceToken{
     content: TokenContent,
 }
 
-impl TokenLike for SpaceToken {}
-
-impl AsRef<TokenContent> for SpaceToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for SpaceToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for SpaceToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for SpaceToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for SpaceToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<&str> for SpaceToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for SpaceToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for SpaceToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(SpaceToken);
 
 impl TryFrom<&mut VecDeque<char>> for SpaceToken {
     type Error = ParseError;
@@ -687,64 +357,7 @@ pub struct WordToken{
     content: TokenContent,
 }
 
-impl TokenLike for WordToken {}
-
-impl AsRef<TokenContent> for WordToken {
-    fn as_ref(&self) -> &TokenContent {
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for WordToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for WordToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-
-impl TryFrom<char> for WordToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<&str> for WordToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for WordToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for WordToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-
-impl TryFrom<(usize, usize, &str)> for WordToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
+token_struct_builder!(WordToken);
 
 impl TryFrom<&mut VecDeque<char>> for WordToken {
     type Error = ParseError;
@@ -771,63 +384,7 @@ pub struct LineBreakToken{
     content: TokenContent,
 }
 
-impl TokenLike for LineBreakToken {}
-
-impl AsRef<TokenContent> for LineBreakToken {
-    fn as_ref(&self) -> &TokenContent{
-        &self.content
-    }
-}
-
-impl AsMut<TokenContent> for LineBreakToken {
-    fn as_mut(&mut self) -> &mut TokenContent {
-        &mut self.content
-    }
-}
-
-impl fmt::Display for LineBreakToken {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.content.fmt(f)
-    }
-}
-
-impl TryFrom<char> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<Self> {
-        TokenContent::from(c).try_into()
-    }
-}
-
-impl TryFrom<&str> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(s: &str) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<String> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(s: String) -> Result<Self> {
-        TokenContent::from(s).try_into()
-    }
-}
-
-impl TryFrom<TokenContent> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(t: TokenContent) -> Result<Self> {
-        Ok(Self{
-            content: t,
-        })
-    }
-}
-
-impl TryFrom<(usize, usize, &str)> for LineBreakToken {
-    type Error = ParseError;
-    fn try_from(t: (usize, usize, &str)) -> Result<Self> {
-        TokenContent::from(t).try_into()
-    }
-}
-
+token_struct_builder!(LineBreakToken);
 
 impl TryFrom<&mut VecDeque<char>> for LineBreakToken {
     type Error = ParseError;
@@ -843,7 +400,6 @@ impl TryFrom<&mut VecDeque<char>> for LineBreakToken {
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
