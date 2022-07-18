@@ -1,4 +1,7 @@
+
+use crate::impl_token;
 use crate::token::*;
+
 use crate::errors::ParseError;
 
 use std::collections::VecDeque;
@@ -153,40 +156,8 @@ impl LexedToken {
     }
 }
 
-macro_rules! token_enum_builder {
-    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
-        impl AsRef<TokenContent> for $enum_name {
-            fn as_ref(&self) -> &TokenContent {
-                match self {
-                    $(Self::$child_name(x) => x.as_ref(),)+
-                }
-            }
-        }
-        impl AsMut<TokenContent> for $enum_name {
-            fn as_mut(&mut self) -> &mut TokenContent {
-                match self {
-                    $(Self::$child_name(x) => x.as_mut(),)+
-                }
-            }
-        }
-        impl fmt::Display for $enum_name{
-            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                match self {
-                    $(Self::$child_name(x) => x.fmt(f),)+
-                }
-            }
-        }
-        $(
-            impl From<$child_type> for $enum_name {
-                fn from(t: $child_type) -> Self {
-                    Self::$child_name(t)
-                }
-            }
-        )+
-    }
-}
 
-token_enum_builder!{
+impl_token!{
     LexedToken {
         BackQuote, BackQuoteToken,
         Hash, HashToken,
