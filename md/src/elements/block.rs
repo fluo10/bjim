@@ -1,77 +1,99 @@
-mod blank_line;
-mod header;
-mod paragraph;
-mod list;
+//mod blank_line;
+//mod header;
+//mod paragraph;
+//mod list;
+
+use crate::errors::ParseError;
+use crate::token::*;
+use crate::elements::*;
 
 use std::fmt;
-pub use blank_line::BlankLine;
-pub use paragraph::Paragraph;
-pub use header::{Header, HeaderPrefix, PeekedHeaderPrefix};
-pub use list::{List, ListItem, ListItemPrefix, PeekedListItemPrefix};
 
-use crate::{
-    errors::ParseError, 
-    token::{Token, TokenKind},
-};
+//pub use blank_line::BlankLine;
+//pub use paragraph::Paragraph;
+//pub use header::{Header, HeaderPrefix, PeekedHeaderPrefix};
+//pub use list::{List, ListItem, ListItemPrefix, PeekedListItemPrefix};
 
 use std::collections::VecDeque;
 use std::convert::TryFrom;
 
 type Result<T> = std::result::Result<T, ParseError>;
 
-#[derive(Debug, PartialEq)]
-pub enum Block {
-    Paragraph(Paragraph),
-    BlankLine(BlankLine),
-    List(List),
-}
-/*
-impl fmt::Display for Block {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, match self {
-            Block::Header(x) => x.to_string(),
-            Block::Paragraph(x) => x.to_string(),
-            Block::BlankLine(x) => x.to_string(),
-            Block::Section(x) => x.to_string(),
-            Block::List(x) => x.to_string(),
-        })
-    }
-}
-*/
 
-impl From<Paragraph> for Block {
-    fn from(p: Paragraph) -> Self {
-        Block::Paragraph(p)
+#[derive(Clone, Debug, PartialEq)]
+pub struct BlankLineElement{
+    pub indent: Option<LexedToken>,
+    pub line_break: LineBreakToken,
+}
+impl From<LineBreakToken> for BlankLineElement {
+    fn from(t: LineBreakToken) -> Self {
+        Self{
+            indent: None,
+            line_break: t,
+        }
     }
 }
 
-impl From<BlankLine> for Block {
-    fn from(b: BlankLine) -> Self {
-        Block::BlankLine(b)
+impl From<(SpaceToken, LineBreakToken)> for BlankLineElement {
+    fn from(t: (SpaceToken, LineBreakToken)) -> Self {
+        Self {
+            indent: Some(t.0.into()),
+            line_break: t.1,
+        }
     }
 }
 
-impl From<List> for Block {
-    fn from(l: List) -> Self {
-        Block::List(l)
-    }
-}
-
-impl TryFrom<&mut VecDeque<Token>> for Block {
+impl TryFrom<&mut VecDeque<LexedToken>> for BlankLineElement {
     type Error = ParseError;
-    fn try_from(t: &mut VecDeque<Token>)  -> Result<Block>{
-
-        let block: Block = match (&t.front().ok_or(ParseError::TokenNotFound)?.kind, &t.get(1).map(|x| &x.kind)) {
-            (&TokenKind::LineBreak, _) | (&TokenKind::Indent, Some(&TokenKind::LineBreak)) => {
-                BlankLine::try_from(t).unwrap().into()
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
+        use LexedToken::*;
+        match (t.get(0), t.get(1)) {
+            (Some(LineBreak(_)), _) => {
+                if let LineBreak(x) = t.pop_front().unwrap() {
+                    Ok(Self::from(x))
+                } else {
+                    unreachable!()
+                }
             },
-            (&TokenKind::Bullet, Some(&TokenKind::Space)) => {
-                List::try_from(&mut *t).map_or_else(|_| Paragraph::try_from(t).unwrap().into(), |x| x.into())
-            },
-            (_, _) => {
-                Paragraph::try_from(t).unwrap().into()
+            (Some(Space(_)), Some(LineBreak(_))) => {
+                if let (Space(x), LineBreak(y)) = (t.pop_front().unwrap(), t.pop_front().unwrap()) {
+                    Ok(Self::from((x, y)))
+                } else {
+                    unreachable!()
+                }
             }
-        };
-        Ok(block)
+            _ => {
+                Err(ParseError::InvalidToken)
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct ParagraphElement {
+    pub content: Vec<InlineElement>,
+}
+
+impl From<Vec<InlineElement>> for ParagraphElement {
+    fn from(t: Vec<InlineElement>) -> Self {
+        ParagraphElement {
+            content: t,
+        }
+    }
+}
+
+impl TryFrom<&mut VecDeque<LexedToken>> for ParagraphElement {
+    type Error = ParseError;
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
+        let mut content = Vec::new();
+        while let Ok(x) = InlineElement::try_from(&mut *t) {
+            if let &InlineElement::LineBreak(_) = &x {
+                content.push(x);
+                break;
+            } else {
+                content.push(x);
+            }
+        }
+        Ok(ParagraphElement::from(content))
     }
 }

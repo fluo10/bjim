@@ -1,8 +1,10 @@
 mod content;
+mod enums;
 mod position;
 mod token_like;
 
 pub use content::TokenContent;
+pub use enums::*;
 pub use position::TokenPosition;
 pub use token_like::TokenLike;
 use crate::errors::ParseError;
@@ -12,7 +14,7 @@ use crate::impl_token;
 use std::convert::From;
 use std::collections::VecDeque;
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 type Result<T> = std::result::Result<T, ParseError>;
 
@@ -26,50 +28,6 @@ pub enum BulletChar{
 const HYPHEN_CHAR: &char = &'-';
 const ASTERISK_CHAR: &char = &'*';
 const PLUS_CHAR: &char = &'+';
-
-impl BulletChar{
-
-    pub fn as_char(&self) -> &'static char{
-        use BulletChar::*;
-        match self {
-            Hyphen => HYPHEN_CHAR,
-            Asterisk => ASTERISK_CHAR,
-            Plus => PLUS_CHAR,
-        }
-    }
-
-    pub fn from_char(c: char) -> Option<Self> {
-        use BulletChar::*;
-        match &c {
-            HYPHEN_CHAR => Some(Hyphen),
-            ASTERISK_CHAR => Some(Asterisk),
-            PLUS_CHAR => Some(Plus),
-            _ => None
-        }
-    }
-    pub fn contains(c: &char) -> bool {
-        match c {
-            HYPHEN_CHAR | ASTERISK_CHAR | PLUS_CHAR => true,
-            _ => false
-        }
-    }
-}
-
-impl fmt::Display for BulletChar {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use BulletChar::*;
-        write!(f, "{}", self.as_char())
-    }
-}
-
-impl TryFrom<char> for BulletChar {
-    type Error = ParseError;
-    fn try_from(c: char) -> Result<BulletChar> {
-        Self::from_char(c).ok_or(ParseError::InvalidChar{expected: "-*+", found: c})
-    }
-}
-
-
 
 #[derive(Clone, Debug, PartialEq,)]
 pub struct BackQuoteToken {
@@ -282,6 +240,12 @@ pub struct HeadingPrefixToken {
 
 impl_token!(HeadingPrefixToken);
 
+impl AddAssign<HashToken> for HeadingPrefixToken {
+    fn add_assign(&mut self, rhs: HashToken) {
+        self.as_mut().add_assign(rhs);
+    }
+}
+
 impl From<HashToken> for HeadingPrefixToken {
     fn from(t: HashToken) -> Self {
         TokenContent::from(t).try_into().unwrap()
@@ -328,6 +292,24 @@ impl_token!(IndentToken);
 impl From<SpaceToken> for IndentToken {
     fn from(t: SpaceToken) -> Self {
         TokenContent::from(t).try_into().unwrap()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq,)]
+pub struct StatusToken {
+    content: TokenContent,
+}
+
+impl_token!(StatusToken);
+
+impl TryFrom<LexedToken> for StatusToken {
+    type Error = ParseError;
+    fn try_from(t: LexedToken) -> Result<Self> {
+        if t.len() == 1 {
+            Self::try_from(TokenContent::from(t))
+        } else {
+            Err(ParseError::InvalidToken)
+        }
     }
 }
 

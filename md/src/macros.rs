@@ -80,3 +80,60 @@ macro_rules! impl_token {
         )+
     };
 }
+macro_rules! impl_enum_is {
+    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
+        impl $enum_name {
+            $(
+                impl From<$child_type> for $enum_name {
+                    fn from(t: $child_type) -> Self {
+                        Self::$child_name(t)
+                    }
+                }
+            )+
+
+        }
+    };
+}
+
+
+macro_rules! impl_list_item {
+    ($struct_name:ident) => {
+        
+        impl fmt::Display for $struct_name {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.content.fmt(f)
+            }
+        }
+    };
+    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
+        impl AsRef<TokenContent> for $enum_name {
+            fn as_ref(&self) -> &TokenContent {
+                match self {
+                    $(Self::$child_name(x) => x.as_ref(),)+
+                }
+            }
+        }
+        impl AsMut<TokenContent> for $enum_name {
+            fn as_mut(&mut self) -> &mut TokenContent {
+                match self {
+                    $(Self::$child_name(x) => x.as_mut(),)+
+                }
+            }
+        }
+        impl fmt::Display for $enum_name{
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                match self {
+                    $(Self::$child_name(x) => x.fmt(f),)+
+                }
+            }
+        }
+        $(
+            impl From<$child_type> for $enum_name {
+                fn from(t: $child_type) -> Self {
+                    Self::$child_name(t)
+                }
+            }
+        )+
+    };
+}
+

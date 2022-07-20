@@ -1,4 +1,4 @@
-//pub mod elements;
+pub mod elements;
 //pub mod parser;
 pub mod lexer;
 pub mod macros;

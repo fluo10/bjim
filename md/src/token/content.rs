@@ -3,13 +3,14 @@ use crate::token::*;
 
 use std::convert::{From, TryFrom};
 use std::fmt;
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TokenContent {
     pub position: Option<TokenPosition>,
     pub literal: String, 
 }
+
 
 impl<T> Add<T> for TokenContent where
 T: Into<TokenContent>,
@@ -20,6 +21,14 @@ T: Into<TokenContent>,
             position: self.position,
             literal: (self.literal + &other.into().literal),
         }
+    } 
+}
+
+impl<T> AddAssign<T> for TokenContent where 
+T: Into<TokenContent>,
+{
+    fn add_assign(&mut self, other: T) {
+        self.literal += &other.into().literal;
     } 
 }
 
@@ -87,12 +96,13 @@ impl From<(usize, usize, String)> for TokenContent {
     }
 }
 
+
 macro_rules! token_content_from {
-    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
+    ($enum_name:ident {$($var_name:ident),+}) => {
         impl From<$enum_name> for TokenContent {
-            fn from($enum_name) -> TokenContent {
-                match self {
-                    $(Self::$child_name(x) => x.into(),)+
+            fn from(t: $enum_name) -> Self {
+                match t {
+                    $($enum_name::$var_name(x) => x.into(),)+
                 }
             }
         }
@@ -121,3 +131,16 @@ token_content_from!(
     LineBreakToken
 );
 
+token_content_from!{
+    LexedToken {
+        BackQuote,
+        Hash,
+        Hyphen,
+        Tilde,
+        LeftBracket,
+        RightBracket,
+        Space,
+        Word,
+        LineBreak
+    }
+}

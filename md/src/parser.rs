@@ -1,7 +1,8 @@
 use crate::{
-    token::{Token, TokenKind},
-    lexer::Lexer,
+    token::*,
+    lexer::{Lexer, LexedToken},
     elements::*,
+    impl_token,
 };
 use anyhow::Result;
 
@@ -9,66 +10,76 @@ use std::iter::{FromIterator, Peekable};
 use std::collections::{VecDeque};
 use std::convert::{From, TryFrom};
 
+
 #[derive(Debug, PartialEq)]
 pub struct Parser{
-    token_queue: VecDeque<Token>,
+    tokens: VecDeque<LexedToken>,
 }
-
-
 
 impl Parser {
-    pub fn get_token_kind(&self, index: usize) -> Option<&TokenKind> {
-        self.token_queue.get(index).map(|t| &t.kind)
-    }
-    pub fn get_token(&self, index: usize) -> Option<&Token> {
-        self.token_queue.get(index)
-    }
-    pub fn pop_token(&mut self) -> Option<Token> {
-        self.token_queue.pop_front()
-    }
-    pub fn parse(&mut self) -> Section {
-        Section::try_from(&mut self.token_queue).unwrap()
-    }
-
-}
-impl Default for Parser
-{
-    fn default() -> Self {
-        todo!();
-    }
-}
-impl From<Vec<Token>> for Parser {
-    fn from(v: Vec<Token>) -> Self {
-        Parser{
-            token_queue: v.into_iter().collect(),
-        }
+    pub fn build(mut self) -> Result<Body> {
+        Body.try_from(&mut self.tokens)
     }
 }
 
-impl<'a> From<Lexer<'a>> for Parser {
-    fn from(l: Lexer<'a>) -> Self {
-        Parser{
-            token_queue: l.collect(),
-        }
+impl From<Lexer> for Parser {
+    fn from(l: Lexer) -> Self {
+        let que: VecDeque<LexedToken> = l.collect();
+        Self{tokens: l.collect()}
     }
 }
 
-/*
-impl<I> FromIterator<Token> for Parser<I>
-where 
-    I: Iterator<Item = Token>
-{
-    fn from_iter<T>(iter: T) -> Self
-    where 
-        T: IntoIterator<Item = Token>,
-    {
-        Parser{
-            token_iter: iter.into_iter().peekable(),
-            cur_token: None,
-        }
+#[derive(Clone, Debug, PartialEq)]
+pub enum ParsedToken {
+    BackQuote(BackQuoteToken),
+    Hash(HashToken),
+    Hyphen(HyphenToken),
+    //Plus(PlusToken),
+    Tilde(TildeToken),
+    //LParen,
+    //RParen,
+    LeftBracket(LeftBracketToken),
+    RightBracket(RightBracketToken),
+
+    // multiple char token
+    Space(SpaceToken),
+    Word(WordToken),
+
+    LineBreak(LineBreakToken),
+
+    Indent(IndentToken),
+    Bullet(BulletToken),
+    HeadingPrefix(HeadingPrefixToken),
+    Status(StatusToken),
+}
+
+impl_token!{ ParsedToken{
+    BackQuote, BackQuoteToken,
+    Hash, HashToken,
+    Hyphen, HyphenToken,
+    Tilde, TildeToken,
+    LeftBracket, LeftBracketToken,
+    RightBracket, RightBracketToken,
+
+    Space, SpaceToken,
+    Word, WordToken,
+
+    LineBreak, LineBreakToken,
+
+    Indent, IndentToken,
+    Bullet, BulletToken,
+    HeadingPrefix, HeadingPrefixToken,
+    Status, StatusToken,
+}}
+impl ParsedToken
+    pub fn next_position(&self) -> Option<TokenPosition> {
+        let mut position = &self.get_position()?.clone();
+        Some(*position + self)
     }
 }
-*/
+
+impl TokenLike for ParsedToken {}
+
 
 #[cfg(test)]
 mod tests {

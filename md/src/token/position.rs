@@ -1,5 +1,4 @@
-use crate::lexer::LexedToken;
-use crate::token::TokenLike;
+use crate::token::{LexedToken, TokenLike};
 
 use std::convert::{From, Into};
 use std::ops::{Add, AddAssign};
