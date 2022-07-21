@@ -128,36 +128,24 @@ Paragraph.
                                             LineBreakToken::try_from(( 8,  8, "\n")).unwrap(),
                                         ).into(),
                                     ],
-                                )).into(),
-                                ListNoteElement::from((
-                                    (
-                                        HyphenToken::try_from(( 8,  1, "-")).unwrap(),
-                                        SpaceToken::try_from(( 8,  2, " ")).unwrap(),
-                                    ),
                                     vec![
-                                        TextElement::from(vec![
-                                            WordToken::try_from(( 8,  3, "Note2")).unwrap().into(),
-                                        ]).into(),
-                                        LineBreakElement::from(
-                                            LineBreakToken::try_from(( 8,  8, "\n")).unwrap(),
-                                        ).into(),
-                                    ],
-                                )).into(),
-                                ListNoteElement::from((
-                                    (
-                                        SpaceToken::try_from(( 9,  1, "    ")).unwrap(),
-                                        HyphenToken::try_from(( 9,  5, "-")).unwrap(),
-                                        SpaceToken::try_from(( 9,  6, " ")).unwrap(),
-                                    ),
-                                    vec![
-                                        TextElement::from(vec![
-                                            WordToken::try_from(( 9,  7, "Child")).unwrap().into(),
-                                            SpaceToken::try_from(( 9, 12, " ")).unwrap().into(),
-                                            WordToken::try_from(( 9, 13, "note")).unwrap().into(),
-                                        ]).into(),
-                                        LineBreakElement::from(
-                                            LineBreakToken::try_from(( 9, 17, "\n")).unwrap(),
-                                        ).into(),
+                                        ListNoteElement::from((
+                                            (
+                                                SpaceToken::try_from(( 9,  1, "    ")).unwrap(),
+                                                HyphenToken::try_from(( 9,  5, "-")).unwrap(),
+                                                SpaceToken::try_from(( 9,  6, " ")).unwrap(),
+                                            ),
+                                            vec![
+                                                TextElement::from(vec![
+                                                    WordToken::try_from(( 9,  7, "Child")).unwrap().into(),
+                                                    SpaceToken::try_from(( 9, 12, " ")).unwrap().into(),
+                                                    WordToken::try_from(( 9, 13, "note")).unwrap().into(),
+                                                ]).into(),
+                                                LineBreakElement::from(
+                                                    LineBreakToken::try_from(( 9, 17, "\n")).unwrap(),
+                                                ).into(),
+                                            ],
+                                        )).into(),
                                     ],
                                 )).into(),
 
