@@ -216,7 +216,7 @@ pub enum BulletToken {
 }
 
 impl_token!(BulletToken {
-    Hyphen, HyphenToken,
+    Hyphen(HyphenToken),
  } );
 
 #[derive(Clone, Debug, PartialEq,)]

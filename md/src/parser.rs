@@ -30,48 +30,6 @@ impl From<Lexer> for Parser {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
-pub enum ParsedToken {
-    BackQuote(BackQuoteToken),
-    Hash(HashToken),
-    Hyphen(HyphenToken),
-    //Plus(PlusToken),
-    Tilde(TildeToken),
-    //LParen,
-    //RParen,
-    LeftBracket(LeftBracketToken),
-    RightBracket(RightBracketToken),
-
-    // multiple char token
-    Space(SpaceToken),
-    Word(WordToken),
-
-    LineBreak(LineBreakToken),
-
-    Indent(IndentToken),
-    Bullet(BulletToken),
-    HeadingPrefix(HeadingPrefixToken),
-    Status(StatusToken),
-}
-
-impl_token!{ ParsedToken{
-    BackQuote, BackQuoteToken,
-    Hash, HashToken,
-    Hyphen, HyphenToken,
-    Tilde, TildeToken,
-    LeftBracket, LeftBracketToken,
-    RightBracket, RightBracketToken,
-
-    Space, SpaceToken,
-    Word, WordToken,
-
-    LineBreak, LineBreakToken,
-
-    Indent, IndentToken,
-    Bullet, BulletToken,
-    HeadingPrefix, HeadingPrefixToken,
-    Status, StatusToken,
-}}
 
 
 #[cfg(test)]

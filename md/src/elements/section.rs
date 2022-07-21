@@ -197,13 +197,13 @@ impl TryFrom<&mut VecDeque<LexedToken>> for HeadingPrefix {
                 },
                 LexedToken::Space(y) => {
                     space = y;
-                    return Ok(HeadingPrefix::from((prefix, space)))
+                    return Ok(HeadingPrefix::from((prefix, space)));
+                    break;
                 }
                 _ => {
                     unreachable!();
                 }
             }
-            unreachable!();
         } 
         unreachable!();
     }

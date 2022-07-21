@@ -50,7 +50,7 @@ macro_rules! impl_token {
             }
         }
     };
-    ($enum_name:ident {$($child_name:ident,$child_type:ty,)+}) => {
+    ($enum_name:ident { $( $child_name:ident ( $child_type:ty ) , )+}) => {
         impl AsRef<TokenContent> for $enum_name {
             fn as_ref(&self) -> &TokenContent {
                 match self {

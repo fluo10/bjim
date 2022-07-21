@@ -117,7 +117,22 @@ impl From<Vec<InlineElement>> for ListItemContent {
 impl TryFrom<&mut VecDeque<LexedToken>> for ListItemContent {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self>{
-        todo!();
+        if t.is_empty() {
+            return Err(ParseError::TokenNotFound);
+        }
+        let mut v: Vec<InlineElement> = Vec::new();
+        while let Ok(x) = InlineElement::try_from(&mut *t){
+            match &x {
+                InlineElement::LineBreak(_) => {
+                    v.push(x);
+                    break;
+                },
+                _ => {
+                    v.push(x);
+                }
+            }
+        }
+        Ok(v.into())
     }
 }
 

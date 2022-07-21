@@ -96,15 +96,15 @@ impl LexedToken {
 
 impl_token!{
     LexedToken {
-        BackQuote, BackQuoteToken,
-        Hash, HashToken,
-        Hyphen, HyphenToken,
-        Tilde, TildeToken,
-        LeftBracket, LeftBracketToken,
-        RightBracket, RightBracketToken,
-        Space, SpaceToken,
-        Word, WordToken,
-        LineBreak, LineBreakToken,
+        BackQuote(BackQuoteToken),
+        Hash(HashToken),
+        Hyphen(HyphenToken),
+        Tilde(TildeToken),
+        LeftBracket(LeftBracketToken),
+        RightBracket(RightBracketToken),
+        Space(SpaceToken),
+        Word(WordToken),
+        LineBreak(LineBreakToken),
     }
 }
 
@@ -143,4 +143,61 @@ impl TryFrom<&mut VecDeque<char>> for LexedToken {
         Ok(result)
     }
 
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum ParsedToken {
+    BackQuote(BackQuoteToken),
+    Hash(HashToken),
+    Hyphen(HyphenToken),
+    //Plus(PlusToken),
+    Tilde(TildeToken),
+    //LParen,
+    //RParen,
+    LeftBracket(LeftBracketToken),
+    RightBracket(RightBracketToken),
+
+    // multiple char token
+    Space(SpaceToken),
+    Word(WordToken),
+
+    LineBreak(LineBreakToken),
+
+    Indent(IndentToken),
+    Bullet(BulletToken),
+    HeadingPrefix(HeadingPrefixToken),
+    Status(StatusToken),
+}
+
+impl_token!{
+    ParsedToken{
+        BackQuote(BackQuoteToken),
+        Hash(HashToken),
+        Hyphen(HyphenToken),
+        Tilde(TildeToken),
+        LeftBracket(LeftBracketToken),
+        RightBracket(RightBracketToken),
+        Space(SpaceToken),
+        Word(WordToken),
+        LineBreak(LineBreakToken),
+        Indent(IndentToken),
+        Bullet(BulletToken),
+        HeadingPrefix(HeadingPrefixToken),
+        Status(StatusToken),
+}}
+
+impl From<LexedToken> for ParsedToken {
+    fn from(l: LexedToken) -> Self {
+        match l {
+            LexedToken::BackQuote(x) => Self::BackQuote(x),
+            LexedToken::Hash(x) => Self::Hash(x),
+            LexedToken::Hyphen(x) => Self::Hyphen(x),
+            LexedToken::Tilde(x) => Self::Tilde(x),
+            LexedToken::LeftBracket(x) => Self::LeftBracket(x),
+            LexedToken::RightBracket(x) => Self::RightBracket(x),
+            LexedToken::Space(x) => Self::Space(x),
+            LexedToken::Word(x) => Self::Word(x),
+            LexedToken::LineBreak(x) => Self::LineBreak(x),
+        }
+    }
 }

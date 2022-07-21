@@ -67,7 +67,21 @@ impl From<Vec<LexedToken>> for TextElement {
 impl TryFrom<&mut VecDeque<LexedToken>> for TextElement {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
-        todo!();
+        if t.is_empty() {
+            return Err(ParseError::TokenNotFound);
+        }
+        let mut v :Vec<LexedToken> = Vec::new(); 
+        while let x = t.front().unwrap() {
+            match x {
+                &LexedToken::LineBreak(_) => {
+                    break;
+                },
+                _ => {
+                    v.push(t.pop_front().unwrap());
+                }
+            }
+        }
+        Ok(v.into())
     }
 }
 
