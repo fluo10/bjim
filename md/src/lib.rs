@@ -1,5 +1,5 @@
 pub mod elements;
-//pub mod parser;
+pub mod parser;
 pub mod lexer;
 pub mod macros;
 pub mod token;

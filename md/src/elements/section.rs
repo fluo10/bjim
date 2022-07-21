@@ -7,7 +7,7 @@ use std::convert::TryFrom;
 
 type Result<T> = std::result::Result<T, ParseError>;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Section{
     pub header: Option<HeadingElement>,
     pub content: Vec<SectionContentElement>,
@@ -37,7 +37,47 @@ impl From<HeadingElement> for Section {
     }
 }
 
-#[derive(Debug, PartialEq)]
+impl From<Vec<SectionContentElement>> for Section {
+    fn from(v: Vec<SectionContentElement>) -> Self {
+        Section{
+            header: None,
+            content: v,
+            children: Vec::new(),
+        }
+    }
+}
+
+impl From<(HeadingElement, Vec<SectionContentElement>)> for Section {
+    fn from(e:(HeadingElement, Vec<SectionContentElement>)) -> Self {
+        Section{
+            header: Some(e.0),
+            content: e.1,
+            children: Vec::new(),
+        }
+    }
+}
+
+impl From<(HeadingElement, Vec<SectionContentElement>, Vec<Section>)> for Section {
+    fn from(e: (HeadingElement, Vec<SectionContentElement>, Vec<Section>)) -> Self {
+        Section{
+            header: Some(e.0),
+            content: e.1,
+            children: e.2,
+        }
+    }
+}
+
+impl From<(Vec<SectionContentElement>, Vec<Section>)> for Section {
+    fn from(e: (Vec<SectionContentElement>, Vec<Section>)) -> Self {
+        Section{
+            header: None,
+            content: e.0,
+            children: e.1,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum SectionContentElement {
     BlankLine(BlankLineElement),
     List(ListElement),
@@ -115,7 +155,7 @@ impl TryFrom<&mut VecDeque<LexedToken>> for Section {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct HeadingPrefix {
     pub prefix: HeadingPrefixToken,
     pub space: SpaceToken,
@@ -201,7 +241,7 @@ impl TryFrom<&mut VecDeque<LexedToken>> for HeadingContent {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct HeadingElement {
     pub prefix: HeadingPrefix,
     pub content: Vec<InlineElement>
@@ -210,6 +250,16 @@ pub struct HeadingElement {
 impl HeadingElement {
     pub fn heading_level(&self) -> u8 {
         self.prefix.heading_level()
+    }
+}
+
+impl From<(HeadingPrefixToken, SpaceToken, Vec<InlineElement>)> for HeadingElement {
+    fn from(f: (HeadingPrefixToken, SpaceToken, Vec<InlineElement>)) -> Self {
+        Self{
+            prefix: (f.0, f.1).into(),
+            content: f.2,
+        }
+
     }
 }
 impl TryFrom<&mut VecDeque<LexedToken>> for HeadingElement {

@@ -18,6 +18,7 @@ use std::collections::VecDeque;
 
 type Result<T> = std::result::Result<T, ParseError>;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Body {
     content: Section,
 }

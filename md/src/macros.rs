@@ -1,3 +1,4 @@
+use std::fmt;
 #[macro_export]
 macro_rules! impl_token {
     ($struct_name:ident) => {

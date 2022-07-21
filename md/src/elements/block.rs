@@ -69,7 +69,7 @@ impl TryFrom<&mut VecDeque<LexedToken>> for BlankLineElement {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ParagraphElement {
     pub content: Vec<InlineElement>,
 }

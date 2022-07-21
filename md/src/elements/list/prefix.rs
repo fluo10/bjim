@@ -18,21 +18,25 @@ impl ListItemPrefix {
     }
 }
 
-impl From<(BulletToken, SpaceToken)> for ListItemPrefix {
-    fn from(t: (BulletToken, SpaceToken)) -> Self {
+impl<T> From<(T, SpaceToken)> for ListItemPrefix where
+T: Into<BulletToken>,
+{
+    fn from(t: (T, SpaceToken)) -> Self {
         ListItemPrefix {
             indent: None,
-            bullet: t.0,
+            bullet: t.0.into(),
             space: t.1,
         }
     }
 }
 
-impl From<(SpaceToken, BulletToken, SpaceToken)> for ListItemPrefix {
-    fn from(t: (SpaceToken, BulletToken, SpaceToken)) -> Self {
+impl<T> From<(SpaceToken, T, SpaceToken)> for ListItemPrefix where
+T: Into<BulletToken>
+{
+    fn from(t: (SpaceToken, T, SpaceToken)) -> Self {
         ListItemPrefix {
             indent: Some(t.0),
-            bullet: t.1,
+            bullet: t.1.into(),
             space: t.2,
         }
     }
@@ -45,14 +49,14 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListItemPrefix {
         match (tokens.get(0), tokens.get(1), tokens.get(2)) {
             (Some(&Space(_)),Some(&Hyphen(_)),Some(&Space(_))) => {
                 if let (Space(x), Hyphen(y), Space(z)) = (tokens.pop_front().unwrap(), tokens.pop_front().unwrap(), tokens.pop_front().unwrap()) {
-                    Ok(ListItemPrefix::from((x, y.into(), z)))
+                    Ok(ListItemPrefix::from((x, y, z)))
                 } else {
                     unreachable!()
                 }
             },
             (Some(&Hyphen(_)), Some(&Space(_)), _) => {
                 if let (Hyphen(x), Space(y)) = (tokens.pop_front().unwrap(), tokens.pop_front().unwrap()) {
-                    Ok(ListItemPrefix::from((x.into(), y)))
+                    Ok(ListItemPrefix::from((x, y)))
                 } else {
                     unreachable!()
                 }

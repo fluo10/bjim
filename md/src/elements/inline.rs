@@ -16,6 +16,17 @@ pub enum InlineElement {
     //HashTag(),
 }
 
+impl From<TextElement> for InlineElement {
+    fn from(t: TextElement) -> Self {
+        Self::Text(t)
+    }
+}
+impl From<LineBreakElement> for InlineElement {
+    fn from(t: LineBreakElement) -> Self {
+        Self::LineBreak(t)
+    }
+}
+
 impl TryFrom<&mut VecDeque<LexedToken>> for InlineElement {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
@@ -45,12 +56,21 @@ pub struct TextElement {
     pub content: Vec<LexedToken>,
 }
 
+impl From<Vec<LexedToken>> for TextElement {
+    fn from(v: Vec<LexedToken>) -> Self {
+        TextElement {
+            content: v,
+        }        
+    }
+}
+
 impl TryFrom<&mut VecDeque<LexedToken>> for TextElement {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
         todo!();
     }
 }
+
 
 
 #[derive(Clone, Debug, PartialEq)]

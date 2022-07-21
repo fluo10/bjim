@@ -12,7 +12,7 @@ use std::collections::VecDeque;
 use std::convert::TryFrom;
 
 type Result<T> = std::result::Result<T, ParseError>;
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct ListElement {
     pub content: Vec<ListItemElement>,
 }
@@ -22,6 +22,14 @@ impl ListElement {
     pub fn new() -> Self {
         ListElement {
             content: Vec::new(),
+        }
+    }
+}
+
+impl From<Vec<ListItemElement>> for ListElement {
+    fn from(v: Vec<ListItemElement>) -> Self {
+        Self{
+            content: v,
         }
     }
 }
@@ -98,6 +106,14 @@ pub struct ListItemContent {
     content: Vec<InlineElement>,
 }
 
+impl From<Vec<InlineElement>> for ListItemContent {
+    fn from(v: Vec<InlineElement>) -> Self {
+        Self{
+            content: v,
+        }
+    }
+}
+
 impl TryFrom<&mut VecDeque<LexedToken>> for ListItemContent {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self>{
@@ -118,16 +134,31 @@ impl ListItemLike for ListNoteElement {
     }
 }
 
-impl From<(ListItemPrefix, ListItemContent, Vec<ListItemElement>)> for ListNoteElement {
-    fn from(t: (ListItemPrefix, ListItemContent, Vec<ListItemElement>)) -> ListNoteElement {
-        Self{
-            prefix: t.0,
-            content: t.1,
-            children: t.2,
+impl<T, U> From<(T, U)> for ListNoteElement where 
+T: Into<ListItemPrefix>,
+U: Into<ListItemContent>,
+{
+    fn from(t: (T, U)) -> Self {
+        Self {
+            prefix: t.0.into(),
+            content: t.1.into(),
+            children: Vec::new(),
         }
     }
 }
 
+impl<T, U> From<(T, U, Vec<ListItemElement>)> for ListNoteElement where 
+T: Into<ListItemPrefix>,
+U: Into<ListItemContent>,
+{
+    fn from(t: (T, U, Vec<ListItemElement>)) -> Self {
+        Self {
+            prefix: t.0.into(),
+            content: t.1.into(),
+            children: t.2,
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListTaskElement {
@@ -143,12 +174,31 @@ impl ListItemLike for ListTaskElement {
     }
 }
 
-impl From<(ListItemPrefix, TaskPrefix, ListItemContent, Vec<ListItemElement>)> for ListTaskElement {
-    fn from(t: (ListItemPrefix, TaskPrefix, ListItemContent, Vec<ListItemElement>)) -> ListTaskElement {
-        Self{
-            prefix: t.0,
-            status: t.1,
-            content: t.2,
+impl<T, U, V> From<(T, U, V)> for ListTaskElement where 
+T: Into<ListItemPrefix>,
+U: Into<TaskPrefix>,
+V: Into<ListItemContent>,
+{
+    fn from(t: (T, U, V)) -> Self {
+        Self {
+            prefix: t.0.into(),
+            status: t.1.into(),
+            content: t.2.into(),
+            children: Vec::new(),
+        }
+    }
+}
+
+impl<T, U, V> From<(T, U, V, Vec<ListItemElement>)> for ListTaskElement where 
+T: Into<ListItemPrefix>,
+U: Into<TaskPrefix>,
+V: Into<ListItemContent>,
+{
+    fn from(t: (T, U, V, Vec<ListItemElement>)) -> Self {
+        Self {
+            prefix: t.0.into(),
+            status: t.1.into(),
+            content: t.2.into(),
             children: t.3,
         }
     }

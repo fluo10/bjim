@@ -23,7 +23,6 @@ impl TokenPosition{
 /// Examples
 /// 
 /// ```
-/// use bjim_md::lexer::LexedToken;
 /// use bjim_md::token::*;
 /// use std::ops::Add;
 /// let position = TokenPosition::new();
