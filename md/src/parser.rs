@@ -1,82 +1,45 @@
+use crate::errors::ParseError;
 use crate::{
-    token::{Token, TokenKind},
+    token::*,
     lexer::Lexer,
     elements::*,
+    impl_token,
 };
-use anyhow::Result;
 
 use std::iter::{FromIterator, Peekable};
 use std::collections::{VecDeque};
 use std::convert::{From, TryFrom};
+use std::fmt;
+
+type Result<T> = std::result::Result<T, ParseError>;
 
 #[derive(Debug, PartialEq)]
 pub struct Parser{
-    token_queue: VecDeque<Token>,
+    tokens: VecDeque<LexedToken>,
 }
-
-
 
 impl Parser {
-    pub fn get_token_kind(&self, index: usize) -> Option<&TokenKind> {
-        self.token_queue.get(index).map(|t| &t.kind)
-    }
-    pub fn get_token(&self, index: usize) -> Option<&Token> {
-        self.token_queue.get(index)
-    }
-    pub fn pop_token(&mut self) -> Option<Token> {
-        self.token_queue.pop_front()
-    }
-    pub fn parse(&mut self) -> Section {
-        Section::try_from(&mut self.token_queue).unwrap()
-    }
-
-}
-impl Default for Parser
-{
-    fn default() -> Self {
-        todo!();
-    }
-}
-impl From<Vec<Token>> for Parser {
-    fn from(v: Vec<Token>) -> Self {
-        Parser{
-            token_queue: v.into_iter().collect(),
-        }
+    pub fn build(mut self) -> Result<Body> {
+        Body::try_from(&mut self.tokens)
     }
 }
 
-impl<'a> From<Lexer<'a>> for Parser {
-    fn from(l: Lexer<'a>) -> Self {
-        Parser{
-            token_queue: l.collect(),
-        }
+impl From<Lexer> for Parser {
+    fn from(l: Lexer) -> Self {
+        Self{tokens: l.collect()}
     }
 }
 
-/*
-impl<I> FromIterator<Token> for Parser<I>
-where 
-    I: Iterator<Item = Token>
-{
-    fn from_iter<T>(iter: T) -> Self
-    where 
-        T: IntoIterator<Item = Token>,
-    {
-        Parser{
-            token_iter: iter.into_iter().peekable(),
-            cur_token: None,
-        }
-    }
-}
-*/
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::{assert_eq, assert_ne};
 
     #[test]
-    fn test_parser() {
-         const s: &str = r#######"# Heading
+    fn test_lexer() {
+        const s: &str = r#######"# Heading
 
 Paragraph.
 
@@ -85,139 +48,223 @@ Paragraph.
 - Note1
 - Note2
     - Child note
+
+## Check list
+
+- [ ] Task1
+- [ ] Task2
+    - [ ] Child task
+    - Child note
 "#######;
-        let found: Section = Parser::from(Lexer::from(s)).parse();
-        let expected = Section{
-            header: Some(Header{
-                prefix: HeaderPrefix{
-                    prefix: Token{line: 1, column: 1, kind: TokenKind::HeaderPrefix, literal: "#".to_string()},
-                    space: Token{line: 1, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-                },
-                content: vec![
-                    Inline::Text(Text{
-                        content: vec![
-                            Token{line: 1, column: 3, kind: TokenKind::Text, literal: "Heading".to_string()},
-                        ],
-                    }),
-                    Inline::LineBreak(
-                        Token{line: 1, column: 10, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                    ),   
-                ],
-            }),
-            content: vec![
-                Block::BlankLine(BlankLine{
-                    indent: None,
-                    line_break: Token{line: 2, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                }),
-                Block::Paragraph(Paragraph{
-                    content: vec![
-                        Inline::Text(Text{
-                            content: vec![
-                                Token{line: 3, column: 1, kind: TokenKind::Text, literal: "Paragraph.".to_string()},
-                            ],
-                        }),
-                        Inline::LineBreak(
-                            Token{line: 3, column: 11, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                        ),
+        let lexed = Lexer::from(s);
+        let found = Parser::from(lexed).build().unwrap();
+        let expected = Body::from(
+            Section::from((
+                HeadingElement::from((
+                    HeadingPrefixToken::try_from((1, 1, "#")).unwrap(), 
+                    SpaceToken::try_from((1,  2, " ")).unwrap().into(),
+                    vec![
+                        TextElement::from(vec![
+                            WordToken::try_from(( 1,  3, "Heading")).unwrap().into(),
+                        ]).into(),
+                        LineBreakElement::from(LineBreakToken::try_from(( 1, 10, "\n")).unwrap()).into(),
                     ]
-                }),
-                Block::BlankLine(BlankLine{
-                    indent: None,
-                    line_break: Token{line: 4, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                }),
-            ],
-            children: vec![
-                Section{
-                    header: Some(Header{
-                        prefix: HeaderPrefix {
-                            prefix: Token{line: 5, column: 1, kind: TokenKind::HeaderPrefix, literal: "##".to_string()},
-                            space: Token{line: 5, column: 3, kind: TokenKind::Space, literal: " ".to_string()},
-                        },
-                        content: vec![
-                            Inline::Text(Text{
-                                content: vec![
-                                    Token{line: 5, column: 4, kind: TokenKind::Text, literal: "List".to_string()},
-                                ]
-                            }),
-                            Inline::LineBreak(
-                                    Token{line: 5, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                            ),
+                )),
+                vec![
+                    BlankLineElement::from(LineBreakToken::try_from(( 2,  1, "\n")).unwrap()).into(),
+                    ParagraphElement::from(
+                        vec![
+                            TextElement::from(vec![
+                                WordToken::try_from(( 3,  1, "Paragraph.")).unwrap().into(),
+                            ]).into(),
+                            LineBreakElement::from(
+                                LineBreakToken::try_from(( 3, 11, "\n")).unwrap()
+                            ).into(),
                         ]
-                    }),
-                    content: vec![
-                        Block::BlankLine(BlankLine{
-                            indent: None,
-                            line_break: Token{line: 6, column: 1, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                        }),
-                        Block::List(List{
-                            content: vec![
-                                ListItem{
-                                    prefix: ListItemPrefix{
-                                        indent: None,
-                                        bullet: Token{line: 7, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-                                        space: Token{line: 7, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-                                    },
-                                    checkbox: None,
-                                    content: vec![
-                                        Inline::Text(Text{
-                                            content: vec![
-                                                Token{line: 7, column: 3, kind: TokenKind::Text, literal: "Note1".to_string()},
-                                            ]
-                                        }),
-                                        Inline::LineBreak(
-                                                Token{line: 7, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                                        ),
+                    ).into(),
+                    BlankLineElement::from(LineBreakToken::try_from(( 4,  1, "\n")).unwrap()).into(),
+                ],
+                vec![
+                    Section::from((
+                        HeadingElement::from((
+                            HeadingPrefixToken::try_from(( 5,  1, "##")).unwrap(),
+                            SpaceToken::try_from(( 5,  3, " ")).unwrap(),
+                            vec![
+                                TextElement::from(vec![
+                                    WordToken::try_from(( 5,  4, "List")).unwrap().into(),
+                                ]).into(),
+                                LineBreakElement::from(LineBreakToken::try_from(( 5,  8, "\n")).unwrap()).into(),
+                            ]
+                        )),
+                        vec![
+                            BlankLineElement::from(
+                                LineBreakToken::try_from(( 6,  1, "\n")).unwrap()
+                            ).into(),
+                            ListElement::from(vec![
+                                ListNoteElement::from((
+                                    (
+                                        HyphenToken::try_from(( 7,  1, "-")).unwrap(),
+                                        SpaceToken::try_from(( 7,  2, " ")).unwrap(),
+                                    ),
+                                    vec![
+                                        TextElement::from(vec![
+                                            WordToken::try_from(( 7,  3, "Note1")).unwrap().into(),
+                                        ]).into(),
+                                        LineBreakElement::from(
+                                            LineBreakToken::try_from(( 7,  8, "\n")).unwrap()
+                                        ).into(),
                                     ],
-                                    children: Vec::new(),
-                                },
-                                ListItem{
-                                    prefix: ListItemPrefix{
-                                        indent: None,
-                                        bullet: Token{line: 8, column: 1, kind: TokenKind::Bullet, literal: "-".to_string()},
-                                        space: Token{line: 8, column: 2, kind: TokenKind::Space, literal: " ".to_string()},
-                                    },
-                                    checkbox: None,
-                                    content: vec![
-                                        Inline::Text(Text{
-                                            content: vec![
-                                                Token{line: 8, column: 3, kind: TokenKind::Text, literal: "Note2".to_string()},
-                                            ]
-                                        }),
-                                        Inline::LineBreak(
-                                                Token{line: 8, column: 8, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                                        ),
+                                )).into(),
+                                ListNoteElement::from((
+                                    (
+                                        HyphenToken::try_from(( 8,  1, "-")).unwrap(),
+                                        SpaceToken::try_from(( 8,  2, " ")).unwrap(),
+                                    ),
+                                    vec![
+                                        TextElement::from(vec![
+                                            WordToken::try_from(( 8,  3, "Note2")).unwrap().into(),
+                                        ]).into(),
+                                        LineBreakElement::from(
+                                            LineBreakToken::try_from(( 8,  8, "\n")).unwrap(),
+                                        ).into(),
                                     ],
-                                    children: vec![
-                                        ListItem {
-                                            prefix: ListItemPrefix{
-                                                indent: Some(Token{line: 9, column: 1, kind: TokenKind::Indent, literal: "    ".to_string()}),
-                                                bullet: Token{line: 9, column: 5, kind: TokenKind::Bullet, literal: "-".to_string()},
-                                                space: Token{line: 9, column: 6, kind: TokenKind::Space, literal: " ".to_string()},
-                                            },
-                                            checkbox: None,
-                                            content: vec![
-                                                Inline::Text(Text{
-                                                    content: vec![
-                                                        Token{line: 9, column: 7, kind: TokenKind::Text, literal: "Child".to_string()},
-                                                        Token{line: 9, column: 12, kind: TokenKind::Space, literal: " ".to_string()},
-                                                        Token{line: 9, column: 13, kind: TokenKind::Text, literal: "note".to_string()},
-                                                    ]
-                                                }),
-                                                Inline::LineBreak(
-                                                        Token{line: 9, column: 17, kind: TokenKind::LineBreak, literal: "\n".to_string()},
-                                                ),
+                                    vec![
+                                        ListNoteElement::from((
+                                            (
+                                                SpaceToken::try_from(( 9,  1, "    ")).unwrap(),
+                                                HyphenToken::try_from(( 9,  5, "-")).unwrap(),
+                                                SpaceToken::try_from(( 9,  6, " ")).unwrap(),
+                                            ),
+                                            vec![
+                                                TextElement::from(vec![
+                                                    WordToken::try_from(( 9,  7, "Child")).unwrap().into(),
+                                                    SpaceToken::try_from(( 9, 12, " ")).unwrap().into(),
+                                                    WordToken::try_from(( 9, 13, "note")).unwrap().into(),
+                                                ]).into(),
+                                                LineBreakElement::from(
+                                                    LineBreakToken::try_from(( 9, 17, "\n")).unwrap(),
+                                                ).into(),
                                             ],
-                                            children: Vec::new(),
-                                        },
+                                        )).into(),
                                     ],
-                                },
+                                )).into(),
+
+                            ]).into(),
+                            BlankLineElement::from(
+                                LineBreakToken::try_from((10,  1, "\n")).unwrap(),
+                            ).into(),
+                        ]
+                    )),
+                    Section::from((
+                        HeadingElement::from((
+                            HeadingPrefixToken::try_from((11,  1, "##")).unwrap().into(),
+                            SpaceToken::try_from((11,  3, " ")).unwrap().into(),
+                            vec![
+                                TextElement::from(vec![
+                                    WordToken::try_from((11,  4, "Check")).unwrap().into(),
+                                    SpaceToken::try_from((11,  9, " ")).unwrap().into(),
+                                    WordToken::try_from((11, 10, "list")).unwrap().into(),
+                                ]).into(),
+                                LineBreakElement::from(
+                                    LineBreakToken::try_from((11, 14, "\n")).unwrap()
+                                ).into(),
                             ],
-                        }),                 
-                    ],
-                    children: Vec::new(),
-                },
-            ],
-        };
+                        )),
+                        vec![
+                            BlankLineElement::from(
+                                LineBreakToken::try_from((12,  1, "\n")).unwrap()
+                            ).into(),
+                            ListElement::from(vec![
+                                ListTaskElement::from((
+                                    (
+                                        HyphenToken::try_from((13,  1, "-")).unwrap(),
+                                        SpaceToken::try_from((13,  2, " ")).unwrap(),
+                                    ),
+                                    (
+                                        LeftBracketToken::try_from((13,  3, "[")).unwrap(),
+                                        StatusToken::try_from((13,  4, " ")).unwrap(),
+                                        RightBracketToken::try_from((13,  5, "]")).unwrap(),
+                                        SpaceToken::try_from((13,  6, " ")).unwrap(),
+                                    ),
+                                    vec![
+                                        TextElement::from(vec![
+                                            WordToken::try_from((13,  7, "Task1")).unwrap().into(),
+                                        ]).into(),
+                                        LineBreakElement::from(
+                                            LineBreakToken::try_from((13, 12, "\n")).unwrap()
+                                        ).into(),
+                                    ]
+                                )).into(),
+                                ListTaskElement::from((
+                                    (
+                                        HyphenToken::try_from((14,  1, "-")).unwrap(),
+                                        SpaceToken::try_from((14,  2, " ")).unwrap(),
+                                    ),
+                                    (
+                                        LeftBracketToken::try_from((14,  3, "[")).unwrap(),
+                                        StatusToken::try_from((14,  4, " ")).unwrap(),
+                                        RightBracketToken::try_from((14,  5, "]")).unwrap(),
+                                        SpaceToken::try_from((14,  6, " ")).unwrap(),
+                                    ),
+                                    vec![
+                                        TextElement::from(vec![
+                                            WordToken::try_from((14,  7, "Task2")).unwrap().into(),
+                                        ]).into(),
+                                        LineBreakElement::from(
+                                            LineBreakToken::try_from((14, 12, "\n")).unwrap(),
+                                        ).into(),
+                                    ],
+                                    vec![
+                                        ListTaskElement::from((
+                                            (
+                                                SpaceToken::try_from((15,  1, "    ")).unwrap(),
+                                                HyphenToken::try_from((15,  5, "-")).unwrap(),
+                                                SpaceToken::try_from((15,  6, " ")).unwrap(),
+                                            ),
+                                            (
+                                                LeftBracketToken::try_from((15,  7, "[")).unwrap(),
+                                                StatusToken::try_from((15,  8, " ")).unwrap(),
+                                                RightBracketToken::try_from((15,  9, "]")).unwrap(),
+                                                SpaceToken::try_from((15, 10, " ")).unwrap(),
+                                            ),
+                                            vec![
+                                                TextElement::from(vec![
+                                                    WordToken::try_from((15, 11, "Child")).unwrap().into(),                                                    
+                                                    SpaceToken::try_from((15, 16, " ")).unwrap().into(),
+                                                    WordToken::try_from((15, 17, "task")).unwrap().into(),
+                                                ]).into(),
+                                                LineBreakElement::from(
+                                                    LineBreakToken::try_from((15, 21, "\n")).unwrap(),
+                                                ).into(),
+                                            ]
+
+                                        )).into(),
+                                        ListNoteElement::from((
+                                            (
+                                                SpaceToken::try_from((16,  1, "    ")).unwrap(),
+                                                HyphenToken::try_from((16,  5, "-")).unwrap(),
+                                                SpaceToken::try_from((16,  6, " ")).unwrap(),
+                                            ),
+                                            vec![
+                                                TextElement::from(vec![
+                                                    WordToken::try_from((16,  7, "Child")).unwrap().into(),
+                                                    SpaceToken::try_from((16, 12, " ")).unwrap().into(),
+                                                    WordToken::try_from((16, 13, "note")).unwrap().into(),
+                                                ]).into(),
+                                                LineBreakElement::from(
+                                                    LineBreakToken::try_from((16, 17, "\n")).unwrap(),
+                                                ).into(),
+                                            ]
+                                        )).into()
+                                    ]
+                                )).into(),
+                            ]).into(),
+                        ]
+                    ))
+                ]
+            ))
+        );
+        let t: Vec<LexedToken> = Lexer::from(s).collect();
         assert_eq!(found,expected);
     }
 
