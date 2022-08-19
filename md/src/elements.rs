@@ -15,26 +15,53 @@ use crate::errors::ParseError;
 use crate::token::*;
 
 use std::collections::VecDeque;
+use std::convert::{From, Into};
+use std::fmt;
 
 type Result<T> = std::result::Result<T, ParseError>;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Body {
-    content: Section,
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct BodyElement {
+    pub blocks: Vec<BlockElement>,
+    pub sections: Vec<SectionElement>,
 }
-
-impl From<Section> for Body {
-    fn from(s: Section) -> Self {
+impl From<Vec<BlockElement>> for BodyElement {
+    fn from(b: Vec<BlockElement>) -> Self {
         Self{
-            content: s,
+            blocks: b,
+            sections: Vec::new(),
         }
     }
 }
 
-impl TryFrom<&mut VecDeque<LexedToken>> for Body {
-    type Error = ParseError;
-    fn try_from(q: &mut VecDeque<LexedToken>) -> Result<Self> {
-        Ok(Self::from(Section::try_from(&mut *q)?))
+impl From<Vec<SectionElement>> for BodyElement {
+    fn from(s: Vec<SectionElement>) -> Self {
+        Self{
+            blocks: Vec::new(),
+            sections: s,
+        }
     }
 }
 
+impl From<(Vec<BlockElement>, Vec<SectionElement>)> for BodyElement {
+    fn from(e: (Vec<BlockElement>, Vec<SectionElement>) ) -> Self {
+        Self{
+            blocks: e.0,
+            sections: e.1,
+        }
+    }
+}
+
+impl TryFrom<&mut VecDeque<LexedToken>> for BodyElement {
+    type Error = ParseError;
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<BodyElement> {
+        let mut body = Self::default();
+        while let Ok(x) = BlockElement::try_from(&mut *t) {
+            body.blocks.push(x);
+        }
+        while let Ok(c) = SectionElement::try_from(&mut *t) {
+            body.sections.push(c);
+        }
+        Ok(body)
+    }
+}

@@ -70,6 +70,58 @@ impl TryFrom<&mut VecDeque<LexedToken>> for BlankLineElement {
 }
 
 #[derive(Clone, Debug, PartialEq)]
+pub enum BlockElement {
+    BlankLine(BlankLineElement),
+    List(ListElement),
+    Paragraph(ParagraphElement),
+}
+
+impl From<BlankLineElement> for BlockElement {
+    fn from (b: BlankLineElement) -> BlockElement {
+        Self::BlankLine(b)
+    }
+}
+impl From<ListElement> for BlockElement {
+    fn from (l: ListElement) -> BlockElement {
+        Self::List(l)
+    }
+}
+impl From<ParagraphElement> for BlockElement {
+    fn from (p: ParagraphElement) -> BlockElement {
+        Self::Paragraph(p)
+    }
+}
+
+impl TryFrom<&mut VecDeque<LexedToken>> for BlockElement {
+    type Error = ParseError;
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
+        match (t.get(0), t.get(1)) {
+            (Some(LexedToken::Hyphen(_)), Some(LexedToken::Space(_))) => {
+                Ok(ListElement::try_from(&mut *t).unwrap().into())
+            },
+            (Some(LexedToken::LineBreak(_)),_) | 
+            (Some(LexedToken::Space(_)), Some(LexedToken::LineBreak(_))) => {
+                Ok(BlankLineElement::try_from(&mut *t).unwrap().into())
+            },
+            (Some(LexedToken::Hash(_)), Some(LexedToken::Space(_))) |
+            (Some(LexedToken::Hash(_)), Some(LexedToken::Hash(_))) => {
+                if crate::elements::section::peek_heading_level(& *t).is_some() {
+                    Err(ParseError::InvalidToken)
+                } else {
+                    Ok(ParagraphElement::try_from(&mut *t).unwrap().into())
+                }
+            },
+            (None, _) => {
+                Err(ParseError::TokenNotFound)
+            },
+            _ => {
+                Ok(ParagraphElement::try_from(&mut *t).unwrap().into())
+            }
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct ParagraphElement {
     pub content: Vec<InlineElement>,
 }

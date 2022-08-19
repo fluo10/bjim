@@ -19,8 +19,8 @@ pub struct Parser{
 }
 
 impl Parser {
-    pub fn build(mut self) -> Result<Body> {
-        Body::try_from(&mut self.tokens)
+    pub fn build(mut self) -> Result<BodyElement> {
+        BodyElement::try_from(&mut self.tokens)
     }
 }
 
@@ -38,7 +38,7 @@ mod tests {
     use pretty_assertions::{assert_eq, assert_ne};
 
     #[test]
-    fn test_lexer() {
+    fn test_parser() {
         const s: &str = r#######"# Heading
 
 Paragraph.
@@ -58,8 +58,8 @@ Paragraph.
 "#######;
         let lexed = Lexer::from(s);
         let found = Parser::from(lexed).build().unwrap();
-        let expected = Body::from(
-            Section::from((
+        let expected = BodyElement::from(vec![
+            SectionElement::from((
                 HeadingElement::from((
                     HeadingPrefixToken::try_from((1, 1, "#")).unwrap(), 
                     SpaceToken::try_from((1,  2, " ")).unwrap().into(),
@@ -85,7 +85,7 @@ Paragraph.
                     BlankLineElement::from(LineBreakToken::try_from(( 4,  1, "\n")).unwrap()).into(),
                 ],
                 vec![
-                    Section::from((
+                    SectionElement::from((
                         HeadingElement::from((
                             HeadingPrefixToken::try_from(( 5,  1, "##")).unwrap(),
                             SpaceToken::try_from(( 5,  3, " ")).unwrap(),
@@ -155,7 +155,7 @@ Paragraph.
                             ).into(),
                         ]
                     )),
-                    Section::from((
+                    SectionElement::from((
                         HeadingElement::from((
                             HeadingPrefixToken::try_from((11,  1, "##")).unwrap().into(),
                             SpaceToken::try_from((11,  3, " ")).unwrap().into(),
@@ -263,7 +263,7 @@ Paragraph.
                     ))
                 ]
             ))
-        );
+        ]);
         let t: Vec<LexedToken> = Lexer::from(s).collect();
         assert_eq!(found,expected);
     }

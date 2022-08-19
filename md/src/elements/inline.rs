@@ -12,7 +12,7 @@ pub enum InlineElement {
     LineBreak(LineBreakElement),
     //Bold,
     //Italic,
-    //Link(),
+    Link(LinkElement),
     //HashTag(),
 }
 
@@ -50,6 +50,7 @@ impl TryFrom<&mut VecDeque<LexedToken>> for InlineElement {
         }
     }
 }
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TextElement {
@@ -115,5 +116,30 @@ impl TryFrom<&mut VecDeque<LexedToken>> for LineBreakElement {
             _ => Err(ParseError::InvalidToken)
 
         }
+    }
+}
+
+
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct LinkElement {
+    open_bracket: LeftBracketToken,
+    label: Vec<LexedToken>,
+    close_bracket: RightBracketToken,
+    //open_parentheses: LeftParenthesis,
+    //url: UrlToken,
+    //close_parentheses: RightParenthesis,
+}
+
+impl From<()> for LinkElement {
+    fn from(t: ()) -> Self {
+        todo!()
+    }
+}
+
+impl TryFrom<&mut VecDeque<LexedToken>> for LinkElement {
+    type Error = ParseError;
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
+        todo!()
     }
 }
