@@ -167,6 +167,7 @@ pub enum ParsedToken {
     Bullet(BulletToken),
     HeadingPrefix(HeadingPrefixToken),
     Status(StatusToken),
+    Text(TextToken),
 }
 
 impl_token!{
@@ -184,6 +185,7 @@ impl_token!{
         Bullet(BulletToken),
         HeadingPrefix(HeadingPrefixToken),
         Status(StatusToken),
+        Text(TextToken),
 }}
 
 impl From<LexedToken> for ParsedToken {

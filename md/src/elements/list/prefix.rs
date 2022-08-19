@@ -67,7 +67,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListItemPrefix {
         }
     }
 }
+impl From<ListItemPrefix> for Vec<ParsedToken> {
+    fn from(e: ListItemPrefix) -> Vec<ParsedToken> {
+        if let Some(x) = e.indent {
+            vec![x.into(), e.bullet.into(), e.space.into()]
 
+        } else {
+            vec![e.bullet.into(), e.space.into()]
+        }
+    }
+}
 pub fn peek_list_indent(t: &VecDeque<LexedToken>) -> Option<u8> {
     use LexedToken::*;
     match (t.get(0), t.get(1), t.get(2)) {
@@ -128,5 +137,10 @@ impl TryFrom<&mut VecDeque<LexedToken>> for TaskPrefix {
             },
             _ => Err(ParseError::InvalidToken)
         }
+    }
+}
+impl From<TaskPrefix> for Vec<ParsedToken> {
+    fn from(e: TaskPrefix) -> Vec<ParsedToken> {
+        vec![e.open.into(), e.status.into(), e.close.into(), e.space.into()]
     }
 }

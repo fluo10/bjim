@@ -39,7 +39,7 @@ mod tests {
 
     #[test]
     fn test_parser() {
-        const s: &str = r#######"# Heading
+        const raw: &str = r#######"# Heading
 
 Paragraph.
 
@@ -56,9 +56,9 @@ Paragraph.
     - [ ] Child task
     - Child note
 "#######;
-        let lexed = Lexer::from(s);
-        let found = Parser::from(lexed).build().unwrap();
-        let expected = BodyElement::from(vec![
+        let lexed = Lexer::from(raw);
+        let parsed = Parser::from(lexed).build().unwrap();
+        let element = BodyElement::from(vec![
             SectionElement::from((
                 HeadingElement::from((
                     HeadingPrefixToken::try_from((1, 1, "#")).unwrap(), 
@@ -264,8 +264,10 @@ Paragraph.
                 ]
             ))
         ]);
-        let t: Vec<LexedToken> = Lexer::from(s).collect();
-        assert_eq!(found,expected);
+        assert_eq!(parsed,element);
+        let tokens: Vec<ParsedToken> = element.clone().into();
+        let vecstr: Vec<String> = tokens.into_iter().map(|x| x.get_literal().to_string()).collect();
+        assert_eq!(vecstr.join(""),raw);
     }
 
 }

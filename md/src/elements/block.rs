@@ -22,7 +22,7 @@ type Result<T> = std::result::Result<T, ParseError>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct BlankLineElement{
-    pub indent: Option<LexedToken>,
+    pub indent: Option<IndentToken>,
     pub line_break: LineBreakToken,
 }
 impl From<LineBreakToken> for BlankLineElement {
@@ -65,6 +65,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for BlankLineElement {
             _ => {
                 Err(ParseError::InvalidToken)
             }
+        }
+    }
+}
+
+impl From<BlankLineElement> for Vec<ParsedToken> {
+    fn from(e: BlankLineElement) -> Vec<ParsedToken> {
+        if let Some(x) = e.indent {
+            vec![x.into(), e.line_break.into()]
+        } else {
+            vec![e.line_break.into()]
         }
     }
 }
@@ -121,6 +131,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for BlockElement {
     }
 }
 
+impl From<BlockElement> for Vec<ParsedToken> {
+    fn from(e: BlockElement) -> Vec<ParsedToken> {
+        match e {
+            BlockElement::BlankLine(x) => x.into(),
+            BlockElement::List(x) => x.into(),
+            BlockElement::Paragraph(x) => x.into(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParagraphElement {
     pub content: Vec<InlineElement>,
@@ -147,5 +167,15 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ParagraphElement {
             }
         }
         Ok(ParagraphElement::from(content))
+    }
+}
+
+impl From<ParagraphElement> for Vec<ParsedToken> {
+    fn from(p: ParagraphElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        for i in p.content.into_iter() {
+            v.append(&mut i.into())
+        }
+        v
     }
 }

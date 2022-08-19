@@ -2,14 +2,14 @@ mod block;
 mod inline;
 mod list;
 mod section;
-mod traits;
+//mod traits;
 
 
 pub use block::*;
 pub use inline::*;
 pub use list::*;
 pub use section::*;
-pub use traits::*;
+//pub use traits::*;
 
 use crate::errors::ParseError;
 use crate::token::*;
@@ -25,6 +25,7 @@ pub struct BodyElement {
     pub blocks: Vec<BlockElement>,
     pub sections: Vec<SectionElement>,
 }
+
 impl From<Vec<BlockElement>> for BodyElement {
     fn from(b: Vec<BlockElement>) -> Self {
         Self{
@@ -63,5 +64,18 @@ impl TryFrom<&mut VecDeque<LexedToken>> for BodyElement {
             body.sections.push(c);
         }
         Ok(body)
+    }
+}
+
+impl From<BodyElement> for Vec<ParsedToken> {
+    fn from(s: BodyElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        for i in s.blocks.into_iter() {
+            v.append(&mut i.into());
+        }
+        for i in s.sections.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
     }
 }

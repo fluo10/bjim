@@ -9,21 +9,21 @@ type Result<T> = std::result::Result<T, ParseError>;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct SectionElement{
-    pub header: HeadingElement,
+    pub heading: HeadingElement,
     pub content: Vec<BlockElement>,
     pub children: Vec<SectionElement>,
 }
 
 impl SectionElement {
     fn heading_level(&self) -> u8 {
-        self.header.heading_level()
+        self.heading.heading_level()
     }
 }
 
 impl From<HeadingElement> for SectionElement {
     fn from(h: HeadingElement) -> Self {
         SectionElement{
-            header: h,
+            heading: h,
             content: Vec::new(),
             children: Vec::new(),
         }
@@ -33,7 +33,7 @@ impl From<HeadingElement> for SectionElement {
 impl From<(HeadingElement, Vec<BlockElement>)> for SectionElement {
     fn from(e:(HeadingElement, Vec<BlockElement>)) -> Self {
         SectionElement{
-            header: e.0,
+            heading: e.0,
             content: e.1,
             children: Vec::new(),
         }
@@ -43,7 +43,7 @@ impl From<(HeadingElement, Vec<BlockElement>)> for SectionElement {
 impl From<(HeadingElement, Vec<BlockElement>, Vec<SectionElement>)> for SectionElement {
     fn from(e: (HeadingElement, Vec<BlockElement>, Vec<SectionElement>)) -> Self {
         SectionElement{
-            header: e.0,
+            heading: e.0,
             content: e.1,
             children: e.2,
         }
@@ -71,6 +71,21 @@ impl TryFrom<&mut VecDeque<LexedToken>> for SectionElement {
         Ok(section)
     }
 }
+
+impl From<SectionElement> for Vec<ParsedToken> {
+    fn from(s: SectionElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        v.append(&mut s.heading.into());
+        for i in s.content.into_iter() {
+            v.append(&mut i.into());
+        }
+        for i in s.children.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
+    }
+}
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct HeadingPrefix {
@@ -127,6 +142,12 @@ impl TryFrom<&mut VecDeque<LexedToken>> for HeadingPrefix {
     
 }
 
+impl From<HeadingPrefix> for Vec<ParsedToken> {
+    fn from(p: HeadingPrefix) -> Vec<ParsedToken> {
+        vec![p.prefix.into(), p.space.into()]
+    }
+}
+
 pub fn peek_heading_level(q: &VecDeque<LexedToken>) -> Option<u8> {
     let mut hl: u8 = 0;
     for t in q.iter() {
@@ -155,6 +176,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for HeadingContent {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self>{
         todo!();
+    }
+}
+
+impl From<HeadingContent> for Vec<ParsedToken> {
+    fn from(h: HeadingContent) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        for i in h.content.into_iter() {
+            v.append(&mut i.into())
+        }
+        v
     }
 }
 
@@ -196,5 +227,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for HeadingElement {
             prefix: prefix,
             content: inline,
         })
+    }
+}
+
+impl From<HeadingElement> for Vec<ParsedToken> {
+    fn from(h: HeadingElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        v.append(&mut h.prefix.into());
+        for i in h.content.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
     }
 }

@@ -51,16 +51,26 @@ impl TryFrom<&mut VecDeque<LexedToken>> for InlineElement {
     }
 }
 
+impl From<InlineElement> for Vec<ParsedToken> {
+    fn from(i: InlineElement) -> Vec<ParsedToken> {
+        match i {
+            InlineElement::LineBreak(x) => x.into(),
+            InlineElement::Link(x) => x.into(),
+            InlineElement::Text(x) => x.into(),
+        }
+    }
+}
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TextElement {
-    pub content: Vec<LexedToken>,
+    pub content: TextToken,
 }
 
 impl From<Vec<LexedToken>> for TextElement {
     fn from(v: Vec<LexedToken>) -> Self {
         TextElement {
-            content: v,
+            content: v.into(),
         }        
     }
 }
@@ -86,7 +96,11 @@ impl TryFrom<&mut VecDeque<LexedToken>> for TextElement {
     }
 }
 
-
+impl From<TextElement> for Vec<ParsedToken> {
+    fn from(e: TextElement) -> Vec<ParsedToken> {
+        vec![e.content.into()]
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LineBreakElement {
@@ -119,12 +133,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for LineBreakElement {
     }
 }
 
-
+impl From<LineBreakElement> for Vec<ParsedToken> {
+    fn from(e: LineBreakElement) -> Vec<ParsedToken> {
+        vec![e.content.into()]
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LinkElement {
     open_bracket: LeftBracketToken,
-    label: Vec<LexedToken>,
+    label: TextToken,
     close_bracket: RightBracketToken,
     //open_parentheses: LeftParenthesis,
     //url: UrlToken,
@@ -141,5 +159,11 @@ impl TryFrom<&mut VecDeque<LexedToken>> for LinkElement {
     type Error = ParseError;
     fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self> {
         todo!()
+    }
+}
+
+impl From<LinkElement> for Vec<ParsedToken> {
+    fn from(e: LinkElement) -> Vec<ParsedToken> {
+        vec![e.open_bracket.into(), e.label.into(), e.close_bracket.into()]
     }
 }

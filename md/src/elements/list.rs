@@ -48,6 +48,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListElement {
     }
 }
 
+impl From<ListElement> for Vec<ParsedToken> {
+    fn from(e: ListElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        for li in e.content.into_iter() {
+            v.append(&mut li.into());
+        }
+        v
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum ListItemElement{
     Note(ListNoteElement),
@@ -101,6 +111,15 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListItemElement {
     }
 }
 
+impl From<ListItemElement> for Vec<ParsedToken> {
+    fn from(e: ListItemElement) -> Vec<ParsedToken> {
+        match e {
+            ListItemElement::Note(x) => x.into(),
+            ListItemElement::Task(x) => x.into(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListItemContent {
     content: Vec<InlineElement>,
@@ -133,6 +152,16 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListItemContent {
             }
         }
         Ok(v.into())
+    }
+}
+
+impl From<ListItemContent> for Vec<ParsedToken> {
+    fn from(e: ListItemContent) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        for i in e.content.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
     }
 }
 
@@ -172,6 +201,18 @@ U: Into<ListItemContent>,
             content: t.1.into(),
             children: t.2,
         }
+    }
+}
+
+impl From<ListNoteElement> for Vec<ParsedToken> {
+    fn from(e: ListNoteElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        v.append(&mut e.prefix.into());
+        v.append(&mut e.content.into());
+        for i in e.children.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
     }
 }
 
@@ -216,5 +257,18 @@ V: Into<ListItemContent>,
             content: t.2.into(),
             children: t.3,
         }
+    }
+}
+
+impl From<ListTaskElement> for Vec<ParsedToken> {
+    fn from(e: ListTaskElement) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        v.append(&mut e.prefix.into());
+        v.append(&mut e.status.into());
+        v.append(&mut e.content.into());
+        for i in e.children.into_iter() {
+            v.append(&mut i.into());
+        }
+        v
     }
 }
