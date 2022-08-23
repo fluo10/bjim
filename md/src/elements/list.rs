@@ -14,7 +14,7 @@ use std::convert::TryFrom;
 type Result<T> = std::result::Result<T, ParseError>;
 #[derive(Clone, Debug, PartialEq)]
 pub struct ListElement {
-    pub content: Vec<ListItemElement>,
+    pub content: Vec<ListItemTree>,
 }
 
 
@@ -26,8 +26,8 @@ impl ListElement {
     }
 }
 
-impl From<Vec<ListItemElement>> for ListElement {
-    fn from(v: Vec<ListItemElement>) -> Self {
+impl From<Vec<ListItemTree>> for ListElement {
+    fn from(v: Vec<ListItemTree>) -> Self {
         Self{
             content: v,
         }
@@ -41,7 +41,7 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListElement {
             return Err(ParseError::InvalidToken);
         }
         let mut list = ListElement::new();
-        while let Ok(list_item) = ListItemElement::try_from(&mut *t) {
+        while let Ok(list_item) = ListItemTree::try_from(&mut *t) {
             list.content.push(list_item);
         }
         Ok(list)
@@ -57,6 +57,76 @@ impl From<ListElement> for Vec<ParsedToken> {
         v
     }
 }
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ListItemTree{
+    value: ListItemElement,
+    children: Vec<ListItemTree> 
+}
+
+impl ListItemLike for ListItemTree {
+    fn depth(&self) -> u8 {
+        self.value.depth()
+    }
+}
+
+
+impl<T> From<T> for ListItemTree where
+T: Into<ListItemElement>
+{
+    fn from(e: T) -> Self {
+        Self{
+            value: e.into(),
+            children: Vec::new(),
+        }
+    }
+}
+impl<T, U> From<(T, Vec<U>)> for ListItemTree where
+T: Into<ListItemElement>,
+U: Into<ListItemTree>
+{
+    fn from(e: (T, Vec<U>)) -> Self {
+        Self{
+            value: e.0.into(),
+            children: e.1.into_iter().map(|x| x.into()).collect(),
+        }
+    }
+}
+
+impl TryFrom<&mut VecDeque<LexedToken>> for ListItemTree {
+    type Error = ParseError;
+    fn try_from(t: &mut VecDeque<LexedToken>) -> Result<Self>{
+        let value = ListItemElement::try_from(&mut *t)?;
+        let mut children = Vec::new();
+        while let Some(x) = peek_list_indent(&*t) {
+            if x > value.depth() {
+                if let Ok(x) = ListItemTree::try_from(&mut *t) {
+                    children.push(x);
+                } else {
+                    unreachable!();
+                }
+            } else {
+                break;
+            }
+        }
+        Ok(Self{
+            value: value,
+            children: children,
+        })
+    }
+}
+
+impl From<ListItemTree> for Vec<ParsedToken> {
+    fn from(e: ListItemTree) -> Vec<ParsedToken> {
+        let mut v = Vec::new();
+        v.append(&mut e.value.into());
+        for child in e.children.into_iter() {
+            v.append(&mut child.into());
+        }
+        v
+    }
+}
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ListItemElement{
@@ -92,21 +162,9 @@ impl TryFrom<&mut VecDeque<LexedToken>> for ListItemElement {
         let task_prefix =  TaskPrefix::try_from(&mut *t).ok();
 
         let content = ListItemContent::try_from(&mut *t).unwrap();
-        let mut children = Vec::<ListItemElement>::new();
-        while let Some(x) = peek_list_indent(&*t) {
-            if x > list_prefix.depth() {
-                if let Ok(x) = ListItemElement::try_from(&mut *t) {
-                    children.push(x);
-                } else {
-                    unreachable!();
-                }
-            } else {
-                break;
-            }
-        }
         match task_prefix {
-            Some(x) => Ok(ListTaskElement::from((list_prefix, x, content, children)).into()),
-            None => Ok(ListNoteElement::from((list_prefix, content, children)).into())
+            Some(x) => Ok(ListTaskElement::from((list_prefix, x, content)).into()),
+            None => Ok(ListNoteElement::from((list_prefix, content)).into())
         }
     }
 }
@@ -169,7 +227,6 @@ impl From<ListItemContent> for Vec<ParsedToken> {
 pub struct ListNoteElement {
     prefix: ListItemPrefix,
     content: ListItemContent,
-    children: Vec<ListItemElement>
 }
 
 impl ListItemLike for ListNoteElement {
@@ -186,20 +243,6 @@ U: Into<ListItemContent>,
         Self {
             prefix: t.0.into(),
             content: t.1.into(),
-            children: Vec::new(),
-        }
-    }
-}
-
-impl<T, U> From<(T, U, Vec<ListItemElement>)> for ListNoteElement where 
-T: Into<ListItemPrefix>,
-U: Into<ListItemContent>,
-{
-    fn from(t: (T, U, Vec<ListItemElement>)) -> Self {
-        Self {
-            prefix: t.0.into(),
-            content: t.1.into(),
-            children: t.2,
         }
     }
 }
@@ -209,9 +252,6 @@ impl From<ListNoteElement> for Vec<ParsedToken> {
         let mut v = Vec::new();
         v.append(&mut e.prefix.into());
         v.append(&mut e.content.into());
-        for i in e.children.into_iter() {
-            v.append(&mut i.into());
-        }
         v
     }
 }
@@ -221,7 +261,6 @@ pub struct ListTaskElement {
     prefix: ListItemPrefix,
     status: TaskPrefix,
     content: ListItemContent,
-    children: Vec<ListItemElement>
 }
 
 impl ListItemLike for ListTaskElement {
@@ -240,22 +279,6 @@ V: Into<ListItemContent>,
             prefix: t.0.into(),
             status: t.1.into(),
             content: t.2.into(),
-            children: Vec::new(),
-        }
-    }
-}
-
-impl<T, U, V> From<(T, U, V, Vec<ListItemElement>)> for ListTaskElement where 
-T: Into<ListItemPrefix>,
-U: Into<TaskPrefix>,
-V: Into<ListItemContent>,
-{
-    fn from(t: (T, U, V, Vec<ListItemElement>)) -> Self {
-        Self {
-            prefix: t.0.into(),
-            status: t.1.into(),
-            content: t.2.into(),
-            children: t.3,
         }
     }
 }
@@ -266,9 +289,6 @@ impl From<ListTaskElement> for Vec<ParsedToken> {
         v.append(&mut e.prefix.into());
         v.append(&mut e.status.into());
         v.append(&mut e.content.into());
-        for i in e.children.into_iter() {
-            v.append(&mut i.into());
-        }
         v
     }
 }
