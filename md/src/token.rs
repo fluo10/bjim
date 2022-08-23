@@ -313,6 +313,26 @@ impl TryFrom<LexedToken> for StatusToken {
     }
 }
 
+#[derive(Clone, Debug, PartialEq,)]
+pub struct TextToken {
+    content: TokenContent,
+}
+
+impl_token!(TextToken);
+
+impl From<Vec<LexedToken>> for TextToken {
+    fn from(v: Vec<LexedToken>) -> Self {
+        let mut i = v.into_iter().map(|x| TokenContent::from(x));
+        let mut initial = i.next().unwrap(); 
+        for token in i {
+            initial += token;
+        } 
+        Self{
+            content: initial,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
