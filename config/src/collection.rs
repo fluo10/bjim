@@ -1,6 +1,5 @@
-pub use crate::config::{PeriodFormat, Period};
+pub use crate::{Config, PeriodFormat, Period};
 
-use crate::{Config, Page};
 use std::fs::{remove_file, rename};
 use std::path::{Path, PathBuf};
 #[cfg(windows)]
@@ -82,6 +81,7 @@ impl CollectionConfig {
         }
     }
 
+    /*
     pub fn migrate(&self, config: &Config,  exists: &[&Path]) -> Result<()> {
         let date: NaiveDate = Local::today().naive_local();
         if let Some((latest_path, period)) = self.get_latest_path_period(&exists) {
@@ -89,11 +89,11 @@ impl CollectionConfig {
                 Err(anyhow::anyhow!("Migration is not needed"))
             } else {
                 let mut latest_page = Page::new(&latest_path);
-                let today_path = config.data_dir.join(self.get_path(date).unwrap());
+                let today_path = config.core.data_dir.join(self.get_path(date).unwrap());
                 let mut today_page = Page::new(today_path);
                 latest_page.read();
                 latest_page.migrate_to(&mut today_page);
-                if !config.dry_run {
+                if !config.core.read_only {
                     latest_page.write();
                     today_page.write();
                 }
@@ -134,7 +134,7 @@ impl CollectionConfig {
         }
         
     }
-    
+    */
 }
 
 

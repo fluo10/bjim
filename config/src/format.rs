@@ -67,17 +67,6 @@ pub struct PeriodFormat {
 }
 
 impl PeriodFormat {
-    fn clean_path(p: &AsRef<Path>) -> PathBuf {
-        let mut path = p.as_ref().to_path_buf();
-        let config = Config::global();
-        let file_name = path.file_name().unwrap();
-        if config.index_file_names.contains(file_name) {
-            path.pop();
-        } else {
-            path.set_extension("");
-        }
-        path
-    }
     fn date_format_to_pattern(f: &str) -> String {
         static YEAR_REGEX: OnceCell<Regex> = OnceCell::new();
         static MONTH_REGEX: OnceCell<Regex> = OnceCell::new();
