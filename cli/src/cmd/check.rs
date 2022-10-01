@@ -1,8 +1,10 @@
-pub use clap::Parser;
+use crate::errors::{CliError, Result};
+
+use clap::Parser;
 
 use crate::args::GlobalArgs;
 
-use lib::{Journal};
+use bjim_lib::{Journal};
 
 #[derive(Parser)]
 pub struct CheckCmd {
@@ -13,11 +15,12 @@ pub struct CheckCmd {
 }
 
 impl CheckCmd {
-    pub fn run(&self) {
-        self.global_args.to_config().unwrap().globalize(); 
+    pub fn run(&self) -> Result<()> {
+        let config = self.global_args.to_config()?; 
         let journal = Journal::new().unwrap();
         for page in journal.pages.into_iter() {
             println!("{}", page.path.display() );
         }
+        Ok(())
     }
 }

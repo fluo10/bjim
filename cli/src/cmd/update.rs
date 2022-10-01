@@ -1,5 +1,9 @@
 use crate::args::{GlobalArgs, ModeArgs};
-use lib::{Config, Journal};
+use crate::errors::Result;
+
+use bjim_config::{Config};
+use bjim_lib::{Journal};
+
 
 use clap::Parser;
 
@@ -22,18 +26,12 @@ pub struct UpdateCmd {
 }
 
 impl UpdateCmd {
-    pub fn run(&self) {
-        match self.global_args.to_config().unwrap().globalize(){
-            Ok(()) => {
-                Config::global().show();
-            },
-            Err(x) => {
-                eprintln!("{}",x);
-            }
-        }
-        let mut journal: Journal = Journal::new().unwrap();
+    pub fn run(&self) -> Result<()> {
+        let config = self.global_args.to_config()?;
+        let mut journal: Journal = Journal::from(config);
         journal.reload();
         journal.update();
+        Ok(())
 
     }
 }

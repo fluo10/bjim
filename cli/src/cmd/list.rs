@@ -1,8 +1,9 @@
+pub use crate::errors::Result;
 pub use clap::Parser;
 
 
 use crate::args::GlobalArgs;
-use lib::{Journal};
+use bjim_lib::{Journal};
 
 #[derive(Parser)]
 pub struct ListCmd {
@@ -13,9 +14,9 @@ pub struct ListCmd {
 }
 
 impl ListCmd {
-    pub fn run(&self) {
-        self.global_args.to_config().unwrap().globalize();
-        let mut journal = Journal::new().unwrap();
+    pub fn run(&self) -> Result<()> {
+        let config = self.global_args.to_config()?;
+        let mut journal = Journal::from(config);
         journal.read();
         for page in journal.pages.into_iter().filter_map(|page|{
             if page.has_open_task {
@@ -26,5 +27,6 @@ impl ListCmd {
             
             println!("{}", page.path.display() );
         }
+        Ok(())
     }
 }

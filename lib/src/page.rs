@@ -73,12 +73,11 @@ impl Page {
         buf.write(self.raw_content.as_bytes()).unwrap();
     }
     pub fn migrate_to(&mut self, page: &mut Self, config: Option<&Config>) {
-        let tags: &HashMap<String, TagConfig> = if let Some(x) = config {
-            &x.tags
+        if let Some(x) = config {
+            migrate(self, page, &x.tags);
         } else {
-            &HashMap::new()
+            migrate(self, page, &HashMap::new());
         };
-        migrate(self, page, tags);
     }
 
     fn split_content(&mut self) {

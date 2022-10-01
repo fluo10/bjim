@@ -51,7 +51,7 @@ impl Journal {
 
         // Add daily log for today if not exist yet
         println!("Migrating regular log");
-        match self.migrate_collections(){
+        match self.migrate_collections_auto(){
             Ok(_x) => {
                 info!("done");
             }
@@ -69,19 +69,17 @@ impl Journal {
     }
 
     /// Migrate all collections in config automatically
-    pub fn migrate_collections_auto(&mut self, Vec<&str>) -> Result<()> {
+    pub fn migrate_collections_auto(&mut self) -> Result<()> {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
 
-        for (name, config) in &self.config.collections.iter().filter(|(k, v)| v.auto_migration) {
-            if config.auto_migration {
-                &*self.migrate_collection(&name)?;
-            }
+        for (name, col_config) in self.config.collections.iter().filter(|(k, v)| v.auto_migration) {
+            migrate_collection(&self.config, col_config, &pages[..])?;
         }
         Ok(())
     }
 
     /// Migrate template automatically based on config
-    pub fn migrate_collection(&mut self, col_name: Option<&str>) -> Result<()> {
+    pub fn migrate_collection(&mut self, col_name: &str) -> Result<()> {
         let pages: Vec<&Path> = self.pages.iter().map(|p| p.path.as_path()).collect();
         debug!("Migrating: {}", col_name );
         let collection = &self.config.collections.get(col_name).ok_or(anyhow!("Template {} is nothing in configure", col_name))?;
@@ -149,4 +147,16 @@ fn migrate_collection(config: &Config, col_config: &CollectionConfig, pages: &[&
         bail!("Latest page is not found");
     }
         
+}
+
+impl From<Config> for Journal {
+    fn from(c: Config) -> Journal {
+        let mut journal = Journal{
+            config: c,
+            pages: Vec::new(),
+        };
+        journal.reload();
+        journal
+
+    }
 }

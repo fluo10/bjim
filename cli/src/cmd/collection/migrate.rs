@@ -1,6 +1,6 @@
 use crate::args::GlobalArgs;
 
-use lib::{Journal};
+use bjim_lib::{Journal};
 
 use anyhow::{Result};
 use clap::Parser;
@@ -21,17 +21,12 @@ pub struct CollectionMigrateCmd {
 impl CollectionMigrateCmd {
     pub fn run(&self) -> Result<()> {
         
-        match self.global.to_config().unwrap().globalize(){
-            Ok(()) => {},
-            Err(x) => {
-                eprintln!("{}",x);
-            }
-        }
+        let config = self.global.to_config()?;
 
         let mut journal: Journal = Journal::new().unwrap();
         journal.reload();
         if self.collections.is_empty() {
-            journal.migrate_collections()?;
+            journal.migrate_collections_auto()?;
         } else {
             for name in &self.collections {
                 journal.migrate_collection(&name)?;

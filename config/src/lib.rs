@@ -1,6 +1,6 @@
 mod collection;
 mod core;
-mod errors;
+pub mod errors;
 mod format;
 mod period;
 mod tag;

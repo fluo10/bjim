@@ -1,9 +1,12 @@
+use crate::args::{GlobalArgs, ModeArgs};
+use crate::errors::Result;
+
+use bjim_config::Config;
+
 pub use clap::Parser;
-use super::super::args::{GlobalArgs, ModeArgs};
 
 
 
-use lib::{Config};
 
 #[derive(Parser)]
 pub struct ConfigCmd {
@@ -16,16 +19,10 @@ pub struct ConfigCmd {
 }
 
 impl ConfigCmd {
-    pub fn run(&self) {
-        let mut config: Config = self.global_args.to_config().unwrap();
-        self.mode.add_config(&mut config);
-        match config.globalize() {
-            Ok(()) => {
-                Config::global().show();
-            },
-            Err(x) => {
-                eprintln!("{}",x);
-            }
-        }
+    pub fn run(&self) -> Result<()> {
+        let mut config: Config = self.global_args.to_config()?;
+        self.mode.set_config(&mut config);
+        config.show();
+        Ok(())
     }
 }

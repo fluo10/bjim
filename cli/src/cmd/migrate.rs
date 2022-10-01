@@ -1,8 +1,12 @@
+use crate::args::GlobalArgs;
+use crate::errors::Result;
+
+use bjim_config::Config;
+use bjim_lib::Page;
+
 pub use clap::Parser;
 pub use std::path::PathBuf;
 use std::fs::{create_dir, read_dir};
-use crate::args::GlobalArgs;
-use lib::Page;
 
 #[derive(Parser)]
 pub struct MigrateCmd {
@@ -15,9 +19,9 @@ pub struct MigrateCmd {
 }
 
 impl MigrateCmd {
-    pub fn run(&self) {
+    pub fn run(&self) -> Result<()> {
         println!("Execute migrate");
-        self.global_args.to_config().unwrap().globalize();
+        let config = self.global_args.to_config()?;
         let mut src_paths: Vec<PathBuf> = self.paths.clone();
         let dst_path: PathBuf = src_paths.pop().unwrap();
         if src_paths.len() > 2 {
@@ -61,12 +65,13 @@ impl MigrateCmd {
         assert_eq!(src_pages.len(), dst_pages.len());
         for (mut src_page, mut dst_page) in src_pages.into_iter().zip(dst_pages.into_iter()) {
             src_page.read();
-            src_page.migrate_to(&mut dst_page);
+            src_page.migrate_to(&mut dst_page, Some(&config));
             if !self.dry_run {
                 src_page.write();
                 dst_page.write();
             }
         }
+        Ok(())
         //println!("from: {}", self.src_path);
         //println!("to:   {}", self.dst_path);
     }

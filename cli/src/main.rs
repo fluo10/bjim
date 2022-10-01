@@ -1,5 +1,7 @@
 mod cmd;
 mod args;
+mod errors;
+
 use cmd::Cmd;
 
 use env_logger::{Builder, Env};

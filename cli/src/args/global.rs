@@ -1,10 +1,10 @@
 use anyhow::{Error, Result};
 use clap::Args;
 use git2::Repository;
-use lib::{Config};
+use bjim_config::{Config};
 use std::env;
 use std::path::{PathBuf};
-use std::convert::TryInto;
+use std::convert::{TryFrom, TryInto};
 
 #[derive(Args, Clone)]
 pub struct GlobalArgs {
@@ -35,7 +35,7 @@ impl TryInto<Config> for GlobalArgs  {
                 Config::from_path_and_journal_dir(&c, &j)?
             },
             (Some(c), None) => {
-                Config::from_path(c)?
+                Config::try_from(c)?
             },
             (None, x) => {
                 let result = match x {
@@ -53,7 +53,7 @@ impl TryInto<Config> for GlobalArgs  {
             },
         };
         if let Some(x) = &self.journal_dir {
-            config.data_dir = x.clone();
+            config.core.data_dir = x.clone();
         }
         Ok(config)
     }
