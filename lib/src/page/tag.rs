@@ -1,5 +1,4 @@
-use crate::Config;
-use crate::config::TagConfig;
+use config::TagConfig;
 use std::collections::HashMap;
 use std::convert::{From, Into};
 use regex::Regex;
@@ -15,22 +14,6 @@ fn tag_regex() -> &'static Regex {
 pub struct TagValue {
     name: String,
     value: Option<String>,
-}
-
-impl TagValue {
-    pub fn config(&self) -> &TagConfig {
-        static DEFAULT: TagConfig = TagConfig::new();
-        match Config::global().tags.get(&self.name) {
-            Some(x) => x,
-            None => &DEFAULT
-        }
-    }
-    pub fn is_repeat(&self) -> bool {
-        todo!();
-    }
-    pub fn is_one_shot(&self) -> bool {
-        todo!();
-    }
 }
 
 #[derive(Debug, PartialEq)]

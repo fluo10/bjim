@@ -1,7 +1,6 @@
-mod config;
 mod journal;
 mod page;
+mod errors;
 
-pub use config::Config;
 pub use journal::Journal;
 pub use page::Page;

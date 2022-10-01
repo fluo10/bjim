@@ -1,6 +1,8 @@
 use regex::Regex;
 use super::bullet::TaskStatus;
-use crate::Config;
+use config::{Config, TagConfig};
+
+use std::collections::HashMap;
 
 pub struct PageContent {
     pub raw: String,
@@ -23,14 +25,14 @@ impl PageContent {
     
 
     /// Delete other lines, leaving only the active task, heading and blank lines
-    pub fn filter_open_tasks(&mut self) {
+    pub fn filter_open_tasks(&mut self, tags: &HashMap<String, TagConfig>) {
         let mut patterns: Vec<String> = Vec::new();
         patterns.push([
                 r##"(?m)(?:^[ \t]*?- \[[ /]\] .*?$)"##, // Open task
                 r##"(?:^[ ]*$)"##, // Blank line
                 r##"(?:^#+ .*$)"##, // Header
         ].join("|"));
-        for (tag, _config) in Config::global().tags.iter().filter(|(_t, c)| c.repeat) {
+        for (tag, _config) in tags.iter().filter(|(_t, c)| c.repeat) {
             let pattern = r##"(?:^[ \t]*?- \[x\] .*#"##.to_string() + &regex::escape(tag) +  r##".*$)"##;
             patterns.push(pattern);
         }
@@ -62,12 +64,11 @@ impl From<&str> for PageContent {
 mod tests {
     use super::*;
     
-    use crate::Config;
+    use config::Config;
     
 
     #[test]
     fn replace_task_status() {
-        Config::init_test();
         //Config::default().globalize();
         fn test_by_status(before: TaskStatus, after:TaskStatus) {
             const origin:&str = r"
@@ -123,7 +124,6 @@ mod tests {
 
     #[test]
     fn filter_open_tasks() {
-        Config::init_test();
         let mut content = PageContent::from_str(r##"## Section1
 
 - [ ] Open task
@@ -132,7 +132,7 @@ mod tests {
 - [/] Task in progress
 - [x] Closed task
 - [x] Closed task with #Daily"##);
-        content.filter_open_tasks();
+        content.filter_open_tasks(&HashMap::new());
         assert_eq!(content.raw, r##"## Section1
 
 - [ ] Open task

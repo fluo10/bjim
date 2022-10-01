@@ -5,7 +5,9 @@ mod bullet;
 mod tag;
 
 //mod task;
+use config::{Config, TagConfig};
 
+use std::collections::HashMap;
 use std::convert::AsRef;
 use std::path::{Path, PathBuf};
 use std::fs::{File, OpenOptions, create_dir_all};
@@ -70,26 +72,13 @@ impl Page {
         self.join_content();
         buf.write(self.raw_content.as_bytes()).unwrap();
     }
-    pub fn migrate_to(&mut self, page: &mut Self) {
-        Self::migrate(self, page);
-    }
-    fn migrate(src: &mut Page, dst: &mut Self) {
-        println!("Migrating {:?} to {:?}", &src.path, &dst.path);
-        let src_content: &mut PageContent = src.content.as_mut().unwrap();
-        match (&src.front_matter, &dst.front_matter) {
-            (Some(_x), None) => {
-                dst.front_matter = src.front_matter.clone();
-                dst.front_matter.as_mut().unwrap().update_date(Local::today().naive_local());
-            },
-            _ => {},
+    pub fn migrate_to(&mut self, page: &mut Self, config: Option<&Config>) {
+        let tags: &HashMap<String, TagConfig> = if let Some(x) = config {
+            &x.tags
+        } else {
+            &HashMap::new()
         };
-        let mut dst_content: PageContent = PageContent::from_str(src_content.raw.as_str());
-        
-        src_content.replace_task_status(TaskStatus::Open,TaskStatus::Migrated);
-        dst_content.replace_task_status(TaskStatus::Migrated, TaskStatus::Open);
-        dst_content.filter_open_tasks();
-        dst_content.replace_task_status(TaskStatus::Closed, TaskStatus::Open);
-        dst.content = Some(dst_content);
+        migrate(self, page, tags);
     }
 
     fn split_content(&mut self) {
@@ -113,6 +102,24 @@ impl Page {
 
 }
 
+fn migrate(src: &mut Page, dst: &mut Page, tags: &HashMap<String, TagConfig>) {
+    println!("Migrating {:?} to {:?}", &src.path, &dst.path);
+    let src_content: &mut PageContent = src.content.as_mut().unwrap();
+    match (&src.front_matter, &dst.front_matter) {
+        (Some(_x), None) => {
+            dst.front_matter = src.front_matter.clone();
+            dst.front_matter.as_mut().unwrap().update_date(Local::today().naive_local());
+        },
+        _ => {},
+    };
+    let mut dst_content: PageContent = PageContent::from_str(src_content.raw.as_str());
+        
+    src_content.replace_task_status(TaskStatus::Open,TaskStatus::Migrated);
+    dst_content.replace_task_status(TaskStatus::Migrated, TaskStatus::Open);
+    dst_content.filter_open_tasks(tags);
+    dst_content.replace_task_status(TaskStatus::Closed, TaskStatus::Open);
+    dst.content = Some(dst_content);
+}
 
 #[cfg(test)]
 mod tests {
